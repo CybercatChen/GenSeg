@@ -82,20 +82,15 @@ class PartDecoder(nn.Module):
         super().__init__()
 
         self.num_parts = config.model.superpoint_num
-        self.decoders = nn.ModuleList([Decoder(config) for _ in range(self.num_parts)])
+        self.decoders = Decoder(config)
 
     def forward(self, part_features):
         B, M, E = part_features.shape
         assert M == self.num_parts
 
-        reconstructed_parts = []
-        for i in range(self.num_parts):
-            part_feature = part_features[:, i, :].unsqueeze(1)  # B 1 E
-            reconstructed_part = self.decoders[i](part_feature)  # B N 3
-            reconstructed_parts.append(reconstructed_part)
-        reconstructed_object = torch.cat(reconstructed_parts, dim=1)  # B (M*N) 3
-
-        return reconstructed_object.transpose(2, 1)
+        recon_part = self.decoders(part_features)  # B N 3
+        recon_part = recon_part.transpose(2, 1)
+        return recon_part
 
 
 class SegGen(nn.Module):
