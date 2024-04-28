@@ -105,7 +105,7 @@ class SegGen(nn.Module):
         self.encoder = SuperPoint(config)
 
     def forward(self, points):
-        p_feat, sp_atten, sp_feat, sp_param = self.encoder(points)
+        p_feat, sp_atten, sp_feat = self.encoder(points)
         recon_points = self.decoder(sp_feat)
 
-        return recon_points, p_feat, sp_atten, sp_feat, sp_param
+        return recon_points, p_feat, sp_atten, sp_feat

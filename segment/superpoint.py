@@ -91,6 +91,7 @@ class SuperPoint(nn.Module):
         :param config: config
         """
         super().__init__()
+        self.part_para = None
         if config is None:
             self.encoder_output_dim = [512, 256]
             self.superpoint_num = 15
@@ -118,7 +119,8 @@ class SuperPoint(nn.Module):
             ))
             mlp_in = c
 
-        self.part_para = nn.Parameter(torch.randint(low=0, high=config.model.superpoint_num+1, size=(2048, 1)))
+        self.assign_linear = nn.Linear(1, self.superpoint_num)
+
 
     def forward(self, points):
         """
@@ -131,13 +133,15 @@ class SuperPoint(nn.Module):
         """
         # get point-wise features O
         p_feat = self.encoder(points)  # B N C
-
+        B, N, C = points.shape
         # get superpoint attention map A
         # sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
-        # TODO
-        sp_atten = self.linear()
-        sp_atten = F.softmax(sp_atten, dim=1)  # B 50(sp num) N, softmax on superpoint dim: dim-1
 
+        sp_atten = self.assign_linear(self.part_para).transpose(2, 1)
+        sp_atten = F.softmax(sp_atten, dim=1)  # B 50(sp num) N, softmax on superpoint dim: dim-1
+        # TODO
+        self.part_para = nn.Parameter(
+            torch.randint(low=0, high=self.superpoint_num + 1, size=(B, N, 1)).float()).to('cuda')
         # get superpoint features S
         sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2),
                             p_feat)  # B 50(sp num) C, l1-norm on attention map last dim: dim-2

@@ -68,10 +68,10 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
         # p_feat, sp_atten, sp_feat, sp_param = model(points)
-        recon, p_feat, sp_atten, sp_feat, sp_param = model(points)
+        recon, p_feat, sp_atten, sp_feat = model(points)
 
         # loss and backward
-        loss_ss, loss_loc, loss_sp_balance, loss_emd, label = criterion(points, p_feat, sp_atten, sp_feat, sp_param, recon)
+        loss_ss, loss_loc, loss_sp_balance, loss_emd, label = criterion(points, p_feat, sp_atten, sp_feat, recon)
         loss = 1.0 * loss_ss + 1.0 * loss_loc + 1.0 * loss_emd
         loss /= batch_size
         optimizer.zero_grad()
