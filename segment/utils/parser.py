@@ -8,7 +8,7 @@ def get_args():
     parser.add_argument('--dataset', type=str, default='airplane')
     parser.add_argument('--data_save_path', type=str, default=r'../data/')
     parser.add_argument('--input_data_path', type=str, default=r'../data/shapenet.hdf5')
-    parser.add_argument('--scale_mode', type=str, default='shape_unit')
+    parser.add_argument('--scale_mode', type=str, default=None)
     parser.add_argument('--train_batch_size', default=128, type=int)
     parser.add_argument('--val_batch_size', default=128, type=int)
     parser.add_argument('--log_dir', type=str, default='./logs')

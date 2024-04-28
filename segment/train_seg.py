@@ -69,8 +69,9 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         recon, p_feat, sp_atten, sp_feat = model(points)
 
         # loss and backward
-        loss_ss, loss_loc, loss_sp_balance, loss_emd, label = criterion(points, p_feat, sp_atten, sp_feat, recon)
-        loss = 1.0 * loss_ss + 1.0 * loss_loc + 1.0 * loss_emd
+        loss_ss, loss_loc, loss_sp_balance, loss_emd, loss_inter, label \
+            = criterion(points, p_feat, sp_atten, sp_feat, recon)
+        loss = 1.0 * loss_ss + 1.0 * loss_loc + 1.0 * loss_emd + 1.0 * loss_inter + 0.01 * loss_sp_balance
         loss /= batch_size
         optimizer.zero_grad()
         loss.backward()
@@ -90,11 +91,11 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
 
         # message output
         if (i + 1) % 1 == 0:
-            print('[Epoch %d/%d][Batch %d/%d] Losses = %s lr = %.6f' %
+            print('[Epoch %d/%d][Batch %d/%d] Losses = %s lr = %.3f' %
                   (epoch, config.train.max_epoch, i + 1, n_batches,
-                   ['%.8f' % l for l in losses.val()], optimizer.param_groups[0]['lr']))
+                   ['%.3f' % l for l in losses.val()], optimizer.param_groups[0]['lr']))
 
-    print('[Training] EPOCH: %d Losses = %s' % (epoch, ['%.8f' % l for l in losses.avg()]))
+    print('[Training] EPOCH: %d Losses = %s' % (epoch, ['%.6f' % l for l in losses.avg()]))
 
     return losses
 

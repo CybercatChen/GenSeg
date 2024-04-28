@@ -134,11 +134,7 @@ class SuperPoint(nn.Module):
         p_feat = self.encoder(points)  # B N C
         B, N, C = points.shape
         # get superpoint attention map A
-        # sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
-        # TODO
-        self.part_para = nn.Parameter(
-            torch.randint(low=0, high=self.superpoint_num + 1, size=(B, N, 1)).float()).to('cuda')
-        sp_atten = self.assign_linear(self.part_para).transpose(2, 1)
+        sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
         sp_atten = F.softmax(sp_atten, dim=1)  # B 50(sp num) N, softmax on superpoint dim: dim-1
 
         # get superpoint features S
@@ -185,10 +181,17 @@ class SuperPoint(nn.Module):
         sp_atten_sum = torch.sum(sp_atten_per_sp, dim=-1, keepdim=True) / M  # B 1
         loss_sp_balance = torch.sum((sp_atten_per_sp - sp_atten_sum) ** 2) / M
 
+        # inter loss
+        similarity = torch.bmm(sp_feat, sp_feat.transpose(1, 2))  # B M M
+        mask = torch.eye(M, device=sp_feat.device).unsqueeze(0).repeat(B, 1, 1)
+        similarity_matrix = similarity * (1 - mask) + (-1) * mask
+        max_similarity, _ = torch.max(similarity_matrix, dim=-1)  # B M
+        loss_inter = torch.mean(max_similarity)
+
         # recon loss
         loss_emd = emd.earth_mover_distance(recon, points.transpose(2, 1)).sum()
         label = torch.argmax(sp_atten, axis=-2)
-        return loss_ss, loss_loc, loss_sp_balance, loss_emd, label
+        return loss_ss, loss_loc, loss_sp_balance, loss_emd, loss_inter, label
 
 
 if __name__ == "__main__":
