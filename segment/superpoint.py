@@ -121,7 +121,6 @@ class SuperPoint(nn.Module):
 
         self.assign_linear = nn.Linear(1, self.superpoint_num)
 
-
     def forward(self, points):
         """
         forward of SuperPoint

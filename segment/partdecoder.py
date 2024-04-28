@@ -101,8 +101,8 @@ class PartDecoder(nn.Module):
 class SegGen(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.decoder = PartDecoder(config)
         self.encoder = SuperPoint(config)
+        self.decoder = PartDecoder(config)
 
     def forward(self, points):
         p_feat, sp_atten, sp_feat = self.encoder(points)
