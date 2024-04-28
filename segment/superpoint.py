@@ -135,12 +135,12 @@ class SuperPoint(nn.Module):
         B, N, C = points.shape
         # get superpoint attention map A
         # sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
-
-        sp_atten = self.assign_linear(self.part_para).transpose(2, 1)
-        sp_atten = F.softmax(sp_atten, dim=1)  # B 50(sp num) N, softmax on superpoint dim: dim-1
         # TODO
         self.part_para = nn.Parameter(
             torch.randint(low=0, high=self.superpoint_num + 1, size=(B, N, 1)).float()).to('cuda')
+        sp_atten = self.assign_linear(self.part_para).transpose(2, 1)
+        sp_atten = F.softmax(sp_atten, dim=1)  # B 50(sp num) N, softmax on superpoint dim: dim-1
+
         # get superpoint features S
         sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2),
                             p_feat)  # B 50(sp num) C, l1-norm on attention map last dim: dim-2

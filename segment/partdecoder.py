@@ -23,7 +23,7 @@ class Decoder(nn.Module):
             self.output_dim = 3
             self.use_global = config.model.encoder.use_global
             self.hidden_dim = config.model.encoder.hidden_dim
-            self.point_num = 2048 // config.model.superpoint_num
+            self.point_num = 2048
         assert len(self.hidden_dim) > 0
         assert len(self.input_dim) > 0
 
@@ -50,7 +50,7 @@ class Decoder(nn.Module):
         )
 
         self.point_layer1 = nn.Sequential(
-            nn.Conv1d(1, self.point_num // 2, 1),
+            nn.Conv1d(4, self.point_num // 2, 1),
             nn.ReLU(inplace=True)
         )
 
