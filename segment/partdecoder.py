@@ -100,7 +100,7 @@ class SegGen(nn.Module):
         self.decoder = PartDecoder(config)
 
     def forward(self, points):
-        p_feat, sp_atten, sp_feat = self.encoder(points)
+        p_feat, sp_feat = self.encoder(points)
         recon_points = self.decoder(sp_feat)
 
-        return recon_points, p_feat, sp_atten, sp_feat
+        return recon_points, p_feat, sp_feat

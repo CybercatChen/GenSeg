@@ -34,8 +34,8 @@ class Encoder(nn.Module):
 
         self.input_layer = nn.Sequential(
             nn.Conv1d(self.input_dim, self.hidden_dim[0], 1),
-            # nn.BatchNorm1d(self.hidden_dim[0]),
-            nn.ReLU(inplace=True)
+            nn.BatchNorm1d(self.hidden_dim[0]),
+            nn.LeakyReLU(inplace=True)
         )
 
         self.hidden_layers = nn.Sequential()
@@ -43,8 +43,8 @@ class Encoder(nn.Module):
         for c in self.hidden_dim[1:]:
             self.hidden_layers.add_module(str(len(self.hidden_layers)), nn.Sequential(
                 nn.Conv1d(hidden_in, c, 1),
-                # nn.BatchNorm1d(c),
-                nn.ReLU(inplace=True)
+                nn.BatchNorm1d(c),
+                nn.LeakyReLU(inplace=True)
             ))
             hidden_in = c
 
@@ -56,8 +56,8 @@ class Encoder(nn.Module):
         for c in self.output_dim:
             self.final_layer.add_module(str(len(self.final_layer)), nn.Sequential(
                 nn.Conv1d(hidden_in, c, 1),
-                # nn.BatchNorm1d(c),
-                nn.ReLU(inplace=True)
+                nn.BatchNorm1d(c),
+                nn.LeakyReLU(inplace=True)
             ))
             hidden_in = c
 
@@ -114,7 +114,7 @@ class SuperPoint(nn.Module):
         for c in self.mlp_hidden_dim:
             self.param_mlp.add_module(str(len(self.param_mlp)), nn.Sequential(
                 nn.Conv1d(mlp_in, c, 1),
-                # nn.BatchNorm1d(c),
+                nn.BatchNorm1d(c),
                 nn.ReLU(inplace=True)
             ))
             mlp_in = c
@@ -122,76 +122,17 @@ class SuperPoint(nn.Module):
         self.assign_linear = nn.Linear(1, self.superpoint_num)
 
     def forward(self, points):
-        """
-        forward of SuperPoint
-        :param points: input data, B(batch) N(num) 3(xyz input)
-        :return: p_feat: point-wise features
-                 sp_atten: superpoint attention map of points
-                 sp_feat: superpoint-wise features
-                 sp_param: superpoint-wise parameters
-        """
-        # get point-wise features O
+
         p_feat = self.encoder(points)  # B N C
         B, N, C = points.shape
-        # get superpoint attention map A
-        sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
-        sp_atten = F.softmax(sp_atten, dim=1)  # B 50(sp num) N, softmax on superpoint dim: dim-1
+        sp_feat = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
 
-        # get superpoint features S
-        sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2),
-                            p_feat)  # B 50(sp num) C, l1-norm on attention map last dim: dim-2
+        return p_feat, sp_feat
 
-        return p_feat, sp_atten, sp_feat
-
-    def get_loss(self, points, p_feat, sp_atten, sp_feat, recon):
-        """
-        calculate loss
-        :param points: xyz coordinates, B N 3
-        :param p_feat: point-wise features, B N C
-        :param sp_atten: superpoint attention map, B M N
-        :param sp_feat: superpoint-wise features, B M C
-        :param sp_param: superpoint parameters, B M 14
-        :return:
-        """
-        B, N, C = p_feat.shape
-        _, M, _ = sp_atten.shape
-
-        # ss loss
-        sp_feat_un = sp_feat.unsqueeze(2)  # B M 1 C
-        p_feat_un = p_feat.unsqueeze(1)  # B 1 N C
-        feat_dist = sp_feat_un - p_feat_un  # B M N C
-        feat_dist = torch.norm(feat_dist, dim=-1)  # B M N
-        feat_dist = feat_dist * sp_atten  # B M N
-        # loss_ss = torch.sum(feat_dist) / (M * N)
-        loss_ss = torch.sum(feat_dist)  # paper
-
-        # loc loss
-        centriods = torch.bmm(F.normalize(sp_atten, p=1, dim=2), points)  # B M 3
-        centriods = centriods.unsqueeze(2)  # B M 1 3
-        points_un = points.unsqueeze(1)  # B 1 N 3
-        coord_dist = centriods - points_un  # B M N 3
-        coord_dist = torch.norm(coord_dist, dim=-1)  # B M N
-        coord_dist = coord_dist * sp_atten  # B M N
-        # loss_loc = torch.sum(coord_dist) / (M * N)
-        loss_loc = torch.sum(coord_dist)  # paper
-
-        # sp balance loss
-        # print(sp_atten.max(dim=-1)[0] - sp_atten.min(-1)[0])
-        sp_atten_per_sp = torch.sum(sp_atten, dim=-1)  # B M
-        sp_atten_sum = torch.sum(sp_atten_per_sp, dim=-1, keepdim=True) / M  # B 1
-        loss_sp_balance = torch.sum((sp_atten_per_sp - sp_atten_sum) ** 2) / M
-
-        # inter loss
-        similarity = torch.bmm(sp_feat, sp_feat.transpose(1, 2))  # B M M
-        mask = torch.eye(M, device=sp_feat.device).unsqueeze(0).repeat(B, 1, 1)
-        similarity_matrix = similarity * (1 - mask) + (-1) * mask
-        max_similarity, _ = torch.max(similarity_matrix, dim=-1)  # B M
-        loss_inter = torch.mean(max_similarity)
-
+    def get_loss(self, points, recon):
         # recon loss
         loss_emd = emd.earth_mover_distance(recon, points.transpose(2, 1)).sum()
-        label = torch.argmax(sp_atten, axis=-2)
-        return loss_ss, loss_loc, loss_sp_balance, loss_emd, loss_inter, label
+        return loss_emd
 
 
 if __name__ == "__main__":
