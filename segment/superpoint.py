@@ -35,7 +35,7 @@ class Encoder(nn.Module):
         self.input_layer = nn.Sequential(
             nn.Conv1d(self.input_dim, self.hidden_dim[0], 1),
             nn.BatchNorm1d(self.hidden_dim[0]),
-            nn.LeakyReLU(inplace=True)
+            # nn.LeakyReLU(inplace=True)
         )
 
         self.hidden_layers = nn.Sequential()
@@ -44,7 +44,7 @@ class Encoder(nn.Module):
             self.hidden_layers.add_module(str(len(self.hidden_layers)), nn.Sequential(
                 nn.Conv1d(hidden_in, c, 1),
                 nn.BatchNorm1d(c),
-                nn.LeakyReLU(inplace=True)
+                # nn.LeakyReLU(inplace=True)
             ))
             hidden_in = c
 
@@ -57,7 +57,7 @@ class Encoder(nn.Module):
             self.final_layer.add_module(str(len(self.final_layer)), nn.Sequential(
                 nn.Conv1d(hidden_in, c, 1),
                 nn.BatchNorm1d(c),
-                nn.LeakyReLU(inplace=True)
+                # nn.LeakyReLU(inplace=True)
             ))
             hidden_in = c
 
@@ -131,5 +131,5 @@ class SuperPoint(nn.Module):
 
     def get_loss(self, points, recon):
         # recon loss
-        loss_emd = emd.earth_mover_distance(recon, points.transpose(2, 1)).sum()
+        loss_emd = emd.earth_mover_distance(recon.transpose(2, 1), points.transpose(2, 1)).sum()
         return loss_emd

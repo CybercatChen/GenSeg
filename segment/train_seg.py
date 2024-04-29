@@ -83,8 +83,8 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
 
     print('[Training] EPOCH: %d Losses = %s' % (
         epoch, [(name, '%.4f' % value) for name, value in zip(losses.items, losses.avg())]))
-    save_path = data['cate'][0] + '_' + str(np.array(data['id'][0])) + ".ply"
-
+    save_path = data['cate'][0] + '_' + str(np.array(data['id'][0])) + "_recon.ply"
+    write_ply(save_path, recon[0].cpu().detach().numpy())
     return losses
 
 

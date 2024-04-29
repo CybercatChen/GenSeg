@@ -1,6 +1,53 @@
 import torch.nn as nn
 import torch
 from superpoint import *
+import torch
+import torch.nn.functional as F
+from torch import nn
+
+
+class PointNetEncoder(nn.Module):
+    def __init__(self, zdim, input_dim=3):
+        super().__init__()
+        self.zdim = zdim
+        self.conv1 = nn.Conv1d(input_dim, 128, 1)
+        self.conv2 = nn.Conv1d(128, 128, 1)
+        self.conv3 = nn.Conv1d(128, 256, 1)
+        self.conv4 = nn.Conv1d(256, 512, 1)
+        self.bn1 = nn.BatchNorm1d(128)
+        self.bn2 = nn.BatchNorm1d(128)
+        self.bn3 = nn.BatchNorm1d(256)
+        self.bn4 = nn.BatchNorm1d(512)
+
+        # Mapping to [c], cmean
+        self.fc1_m = nn.Linear(512, 256)
+        self.fc2_m = nn.Linear(256, 128)
+        self.fc3_m = nn.Linear(128, zdim)
+        self.fc_bn1_m = nn.BatchNorm1d(256)
+        self.fc_bn2_m = nn.BatchNorm1d(128)
+
+        # Mapping to [c], cmean
+        self.fc1_v = nn.Linear(512, 256)
+        self.fc2_v = nn.Linear(256, 128)
+        self.fc3_v = nn.Linear(128, zdim)
+        self.fc_bn1_v = nn.BatchNorm1d(256)
+        self.fc_bn2_v = nn.BatchNorm1d(128)
+
+    def forward(self, x):
+        x = x.transpose(1, 2)
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = self.bn4(self.conv4(x))
+        x = torch.max(x, 2, keepdim=True)[0]
+        x = x.view(-1, 512)
+
+        m = F.relu(self.fc_bn1_m(self.fc1_m(x)))
+        m = F.relu(self.fc_bn2_m(self.fc2_m(m)))
+        m = self.fc3_m(m)
+
+        # Returns both mean and logvariance, just ignore the latter in deteministic cases.
+        return m
 
 
 class Decoder(nn.Module):
@@ -30,7 +77,7 @@ class Decoder(nn.Module):
         self.input_layer = nn.Sequential(
             nn.Conv1d(self.input_dim[-1], self.input_dim[0], 1),
             nn.BatchNorm1d(self.hidden_dim[0]),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
         )
 
         self.hidden_layers = nn.Sequential()
@@ -39,24 +86,24 @@ class Decoder(nn.Module):
             self.hidden_layers.add_module(str(len(self.hidden_layers)), nn.Sequential(
                 nn.Conv1d(hidden_in, c, 1),
                 nn.BatchNorm1d(c),
-                nn.ReLU(inplace=True)
+                # nn.ReLU(inplace=True)
             ))
             hidden_in = c
 
         self.final_layer = nn.Sequential(
             nn.Conv1d(self.hidden_dim[0], self.output_dim, 1),
             nn.BatchNorm1d(self.output_dim),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
         )
 
         self.point_layer1 = nn.Sequential(
             nn.Conv1d(4, self.point_num // 2, 1),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
         )
 
         self.point_layer2 = nn.Sequential(
             nn.Conv1d(self.point_num // 2, self.point_num, 1),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
         )
 
     def forward(self, features):
@@ -83,7 +130,6 @@ class PartDecoder(nn.Module):
 
     def forward(self, part_features):
         recon_part = self.decoders(part_features)  # B N 3
-        recon_part = recon_part.transpose(2, 1)
         return recon_part
 
 
