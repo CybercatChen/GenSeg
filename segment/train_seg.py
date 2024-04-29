@@ -1,5 +1,3 @@
-import torch
-from partdecoder import *
 from dataset import *
 from torch.utils.data import DataLoader
 from superpoint import *
@@ -29,7 +27,7 @@ def train(args, config, writer):
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.train.max_epoch)
 
     # Criterion
-    criterion = model.encoder.get_loss
+    criterion = model.get_loss
 
     best_loss = float('inf')
     for epoch in range(config.train.max_epoch):
