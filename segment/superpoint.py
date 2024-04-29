@@ -106,7 +106,7 @@ class SuperPoint(nn.Module):
         self.encoder = Encoder(config)
 
         self.attention_layer = nn.Sequential(
-            nn.Conv1d(self.encoder_output_dim[-1], self.superpoint_num, 1)
+            nn.Conv1d(2048, self.superpoint_num, 1)
         )
 
         self.param_mlp = nn.Sequential()
@@ -125,7 +125,7 @@ class SuperPoint(nn.Module):
 
         p_feat = self.encoder(points)  # B N C
         B, N, C = points.shape
-        sp_feat = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
+        sp_feat = self.attention_layer(p_feat)  # B 50(sp num) N
 
         return p_feat, sp_feat
 
@@ -133,12 +133,3 @@ class SuperPoint(nn.Module):
         # recon loss
         loss_emd = emd.earth_mover_distance(recon, points.transpose(2, 1)).sum()
         return loss_emd
-
-
-if __name__ == "__main__":
-    from torchsummary import summary
-
-    net = SuperPoint().cuda()
-    points = torch.rand(1, 20, 3).cuda()  # 1 batch, 2 points, 3 coords
-    p_feat, sp_atten, sp_feat, sp_param = net(points)
-    net.get_loss(points, p_feat, sp_atten, sp_feat, sp_param)

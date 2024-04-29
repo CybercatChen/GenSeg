@@ -29,7 +29,7 @@ class Decoder(nn.Module):
 
         self.input_layer = nn.Sequential(
             nn.Conv1d(self.input_dim[-1], self.input_dim[0], 1),
-            # nn.BatchNorm1d(self.hidden_dim[0]),
+            nn.BatchNorm1d(self.hidden_dim[0]),
             nn.ReLU(inplace=True)
         )
 
@@ -38,14 +38,14 @@ class Decoder(nn.Module):
         for c in self.hidden_dim[::-1]:
             self.hidden_layers.add_module(str(len(self.hidden_layers)), nn.Sequential(
                 nn.Conv1d(hidden_in, c, 1),
-                # nn.BatchNorm1d(c),
+                nn.BatchNorm1d(c),
                 nn.ReLU(inplace=True)
             ))
             hidden_in = c
 
         self.final_layer = nn.Sequential(
             nn.Conv1d(self.hidden_dim[0], self.output_dim, 1),
-            # nn.BatchNorm1d(self.output_dim),
+            nn.BatchNorm1d(self.output_dim),
             nn.ReLU(inplace=True)
         )
 
@@ -65,9 +65,6 @@ class Decoder(nn.Module):
         :param features: input features, B(batch) N(num) C(feature dim)
         :return: reconstructed points, B N 3(xyz output)
         """
-        B, N, C = features.shape
-        features = features.transpose(2, 1)  # B C N
-
         x = self.input_layer[0](features)  # B 512 N
         for layer in self.hidden_layers:
             x = layer(x)  # B _ N
@@ -85,9 +82,6 @@ class PartDecoder(nn.Module):
         self.decoders = Decoder(config)
 
     def forward(self, part_features):
-        B, M, E = part_features.shape
-        assert M == self.num_parts
-
         recon_part = self.decoders(part_features)  # B N 3
         recon_part = recon_part.transpose(2, 1)
         return recon_part
@@ -101,6 +95,6 @@ class SegGen(nn.Module):
 
     def forward(self, points):
         p_feat, sp_feat = self.encoder(points)
-        recon_points = self.decoder(sp_feat)
+        recon_points = self.decoder(sp_feat.transpose(2, 1))
 
         return recon_points, p_feat, sp_feat
