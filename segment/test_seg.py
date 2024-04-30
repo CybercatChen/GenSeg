@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
 import open3d as o3d
-from dataset import *
+from segment.utils.dataset import *
 from superpoint import SuperPoint
 from segment.utils.config import *
 from segment.utils.utils import *

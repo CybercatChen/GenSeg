@@ -1,10 +1,10 @@
 import sys
-from pointnet import *
-from partae import *
 from chamfer_distance import ChamferDistance as chamfer_dist
 
 sys.path.append('..')
-from utils.PyTorchEMD import emd
+from script.PyTorchEMD import emd
+from segment.model.pointnet import *
+from segment.model.partae import *
 
 
 class SegGen(nn.Module):
@@ -60,10 +60,17 @@ class SegGen(nn.Module):
         sp_atten_sum = torch.sum(sp_atten_per_sp, dim=-1, keepdim=True) / M  # B 1
         loss_sp_balance = torch.sum((sp_atten_per_sp - sp_atten_sum) ** 2) / M
 
+        # loss_inter
+        similarity_matrix = torch.bmm(sp_feat, sp_feat.transpose(1, 2))  # B M M
+        mask = torch.eye(M, device=sp_feat.device).unsqueeze(0).repeat(B, 1, 1)
+        similarity_matrix = similarity_matrix * (1 - mask) + (-1e9) * mask
+        max_similarity, _ = torch.max(similarity_matrix, dim=-1)  # B M
+        loss_inter = torch.mean(max_similarity)
+
         loss_emd = emd.earth_mover_distance(recon.transpose(2, 1), points.transpose(2, 1)).sum()
         loss_mse = F.mse_loss(points, recon, reduction='mean')
 
         chd = chamfer_dist()
         dist1, dist2, idx1, idx2 = chd(points, recon)
         loss_cd = (torch.mean(dist1)) + (torch.mean(dist2))
-        return loss_emd, loss_mse, loss_cd, loss_ss, loss_loc, loss_sp_balance
+        return loss_emd, loss_mse, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter

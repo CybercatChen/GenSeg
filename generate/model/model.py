@@ -1,9 +1,10 @@
 import sys
-from pointnet import *
-from partae import *
 from chamfer_distance import ChamferDistance as chamfer_dist
+
 sys.path.append('..')
-from utils.PyTorchEMD import emd
+from script.PyTorchEMD import emd
+from generate.model.pointnet import *
+from generate.model.partae import *
 
 
 class SegGen(nn.Module):

@@ -1,13 +1,14 @@
-from dataset import *
 from torch.utils.data import DataLoader
-from model import *
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
-import time
-from generate.utils.config import *
-from generate.utils import parser, utils
 from tensorboardX import SummaryWriter
-from generate.utils.visualize import *
+import time
+
+from segment.utils.dataset import *
+from segment.utils.config import *
+from segment.model.model import *
+from segment.utils import parser, utils
+from segment.utils.visualize import *
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -43,6 +44,7 @@ def train(args, config, writer):
         writer.add_scalar('Loss/Epoch/loss_ss', losses.avg(3), epoch)
         writer.add_scalar('Loss/Epoch/loss_loc', losses.avg(4), epoch)
         writer.add_scalar('Loss/Epoch/loss_sp_balance', losses.avg(5), epoch)
+        writer.add_scalar('Loss/Epoch/loss_inter', losses.avg(6), epoch)
 
         if (epoch + 1) % config.train.ckpt_save_freq == 0:
             filename = os.path.join(args.log_file, f'model_{epoch}.pth')
@@ -58,7 +60,8 @@ def train(args, config, writer):
 
 
 def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epoch, writer):
-    losses = utils.AverageMeter(['loss_emd', 'loss_cd', 'loss_mse', 'loss_ss', 'loss_loc', 'loss_sp_balance'])
+    losses = utils.AverageMeter(
+        ['loss_emd', 'loss_cd', 'loss_mse', 'loss_ss', 'loss_loc', 'loss_sp_balance', 'loss_inter'])
     n_batches = len(train_loader)
     model.train()
     for i, data in enumerate(train_loader):
@@ -67,25 +70,27 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         recon, p_feat, sp_feat, sp_atten, label = model(points)
 
         # loss and backward
-        loss_emd, loss_mse, loss_cd, loss_ss, loss_loc, loss_sp_balance \
+        loss_emd, loss_mse, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter \
             = criterion(points, recon, p_feat, sp_feat, sp_atten)
-        loss = loss_emd + loss_ss + loss_sp_balance * 0.01
+        loss = loss_emd + loss_inter + loss_sp_balance * 0.01
         loss /= batch_size
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         # summary
-        losses.update(
-            [loss_emd.item(), loss_cd.item(), loss_mse.item(), loss_ss.item(), loss_loc.item(), loss_sp_balance.item()])
+        losses.update([loss_emd.item(), loss_cd.item(),
+                       loss_mse.item(), loss_ss.item(),
+                       loss_loc.item(), loss_sp_balance.item(),
+                       loss_inter.item()])
         n_itr = epoch * n_batches + i
         writer.add_scalar('Loss/Batch/loss_emd', loss_emd.item(), n_itr)
         writer.add_scalar('Loss/Batch/loss_cd', loss_cd.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_mse', loss_mse.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_mse', loss_ss.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_mse', loss_loc.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_mse', loss_sp_balance.item(), n_itr)
-        writer.add_scalar('Loss/Batch/all_loss', loss.item(), n_itr)
+        # writer.add_scalar('Loss/Batch/loss_mse', loss_mse.item(), n_itr)
+        # writer.add_scalar('Loss/Batch/loss_ss', loss_ss.item(), n_itr)
+        # writer.add_scalar('Loss/Batch/loss_loc', loss_loc.item(), n_itr)
+        # writer.add_scalar('Loss/Batch/loss_sp_balance', loss_sp_balance.item(), n_itr)
+        writer.add_scalar('Loss/Batch/loss_inter', loss_inter.item(), n_itr)
         writer.add_scalar('Loss/Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
 
         save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
