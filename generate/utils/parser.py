@@ -1,11 +1,9 @@
-import os
 import argparse
-from pathlib import Path
 
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='airplane')
+    parser.add_argument('--dataset', type=str, default='chair')
     parser.add_argument('--data_save_path', type=str, default=r'../data/')
     parser.add_argument('--input_data_path', type=str, default=r'../data/shapenet.hdf5')
     parser.add_argument('--scale_mode', type=str, default=None)
