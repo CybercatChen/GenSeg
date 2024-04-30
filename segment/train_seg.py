@@ -88,14 +88,16 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         writer.add_scalar('Loss/Batch/all_loss', loss.item(), n_itr)
         writer.add_scalar('Loss/Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
 
+        save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
+        write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
+        vis_cate(points[0].cpu().detach().numpy(), label[0].cpu().detach().numpy(), config,
+                 save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
+
         torch.cuda.empty_cache()
 
     print('[Training] EPOCH: %d Losses = %s' % (
         epoch, [(name, '%.4f' % value) for name, value in zip(losses.items, losses.avg())]))
-    save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
-    write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
-    vis_cate(points[0].cpu().detach().numpy(), label[0].cpu().detach().numpy(), config,
-             save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
+
     return losses
 
 
