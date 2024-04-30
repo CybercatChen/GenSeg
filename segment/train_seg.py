@@ -40,6 +40,9 @@ def train(args, config, writer):
         writer.add_scalar('Loss/Epoch/loss_emd', losses.avg(0), epoch)
         writer.add_scalar('Loss/Epoch/loss_cd', losses.avg(1), epoch)
         writer.add_scalar('Loss/Epoch/loss_mse', losses.avg(2), epoch)
+        writer.add_scalar('Loss/Epoch/loss_ss', losses.avg(3), epoch)
+        writer.add_scalar('Loss/Epoch/loss_loc', losses.avg(4), epoch)
+        writer.add_scalar('Loss/Epoch/loss_sp_balance', losses.avg(5), epoch)
 
         if (epoch + 1) % config.train.ckpt_save_freq == 0:
             filename = os.path.join(args.log_file, f'model_{epoch}.pth')
@@ -55,36 +58,44 @@ def train(args, config, writer):
 
 
 def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epoch, writer):
-    losses = utils.AverageMeter(['loss_emd', 'loss_cd', 'loss_mse'])
+    losses = utils.AverageMeter(['loss_emd', 'loss_cd', 'loss_mse', 'loss_ss', 'loss_loc', 'loss_sp_balance'])
     n_batches = len(train_loader)
     model.train()
     for i, data in enumerate(train_loader):
         batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
-        recon, p_feat, sp_feat = model(points)
+        recon, p_feat, sp_feat, sp_atten, label = model(points)
 
         # loss and backward
-        loss_emd, loss_mse, loss_cd = criterion(points, recon)
-        loss = loss_emd + loss_cd * 0.01
+        loss_emd, loss_mse, loss_cd, loss_ss, loss_loc, loss_sp_balance \
+            = criterion(points, recon, p_feat, sp_feat, sp_atten)
+        loss = loss_emd + loss_ss + loss_sp_balance * 0.01
         loss /= batch_size
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         # summary
-        losses.update([loss_emd.item(), loss_cd.item(), loss_mse.item()])
+        losses.update(
+            [loss_emd.item(), loss_cd.item(), loss_mse.item(), loss_ss.item(), loss_loc.item(), loss_sp_balance.item()])
         n_itr = epoch * n_batches + i
         writer.add_scalar('Loss/Batch/loss_emd', loss_emd.item(), n_itr)
         writer.add_scalar('Loss/Batch/loss_cd', loss_cd.item(), n_itr)
         writer.add_scalar('Loss/Batch/loss_mse', loss_mse.item(), n_itr)
+        writer.add_scalar('Loss/Batch/loss_mse', loss_ss.item(), n_itr)
+        writer.add_scalar('Loss/Batch/loss_mse', loss_loc.item(), n_itr)
+        writer.add_scalar('Loss/Batch/loss_mse', loss_sp_balance.item(), n_itr)
+        writer.add_scalar('Loss/Batch/all_loss', loss.item(), n_itr)
         writer.add_scalar('Loss/Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
 
         torch.cuda.empty_cache()
 
     print('[Training] EPOCH: %d Losses = %s' % (
         epoch, [(name, '%.4f' % value) for name, value in zip(losses.items, losses.avg())]))
-    save_path = data['cate'][0] + '_' + str(np.array(data['id'][0])) + "_recon.ply"
-    write_ply(os.path.join(args.log_file, save_path), recon[0].cpu().detach().numpy())
+    save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
+    write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
+    vis_cate(points[0].cpu().detach().numpy(), label[0].cpu().detach().numpy(), config,
+             save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
     return losses
 
 
