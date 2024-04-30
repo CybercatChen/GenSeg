@@ -1,4 +1,3 @@
-import sys
 import torch.nn.functional as F
 import torch
 import torch.nn as nn
@@ -73,28 +72,6 @@ class Encoder(nn.Module):
         return x
 
 
-class PointNetEncoder(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.conv1 = nn.Conv1d(3, 64, 1)
-        self.conv2 = nn.Conv1d(64, 128, 1)
-        self.conv3 = nn.Conv1d(128, 256, 1)
-        self.bn1 = nn.BatchNorm1d(64)
-        self.bn2 = nn.BatchNorm1d(128)
-        self.bn3 = nn.BatchNorm1d(256)
-
-    def forward(self, x):
-        x = x.transpose(1, 2)
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = self.bn3(self.conv3(x))
-        point_feature = x.transpose(1, 2)
-        global_feature = torch.max(x, 2, keepdim=True)[0]
-        global_feature = global_feature.view(-1, 1, 256)
-
-        return point_feature, global_feature
-
-
 class Decoder(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -147,12 +124,3 @@ class Decoder(nn.Module):
         x = self.point_layer1(x)
         x = self.point_layer2(x)
         return x
-
-
-if __name__ == "__main__":
-    from torchsummary import summary
-
-    net = PointNetEncoder(256).cuda()
-    points = torch.rand(1, 20, 3).cuda()  # 1 batch, 2 points, 3 coords
-    p_feat, g_feat = net(points)
-    print(p_feat.shape)

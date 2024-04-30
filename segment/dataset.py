@@ -8,7 +8,9 @@ import os
 
 synsetid_to_cate = {
     '517517': 'vessel',
-    '02691156': 'airplane'
+    '02691156': 'airplane',
+    '03001627': 'chair',
+
 }
 cate_to_synsetid = {v: k for k, v in synsetid_to_cate.items()}
 

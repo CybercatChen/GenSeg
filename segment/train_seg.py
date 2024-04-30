@@ -1,13 +1,13 @@
 from dataset import *
 from torch.utils.data import DataLoader
-from superpoint import *
+from model import *
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import time
-from segment.utils.config import *
-from segment.utils import parser, utils
+from generate.utils.config import *
+from generate.utils import parser, utils
 from tensorboardX import SummaryWriter
-from segment.utils.visualize import *
+from generate.utils.visualize import *
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -37,8 +37,9 @@ def train(args, config, writer):
 
         is_best = False
 
-        writer.add_scalar('Loss/Epoch/0_loss_emd', losses.avg(0), epoch)
-        writer.add_scalar('Loss/Epoch/1_all_loss', losses.avg(1), epoch)
+        writer.add_scalar('Loss/Epoch/loss_emd', losses.avg(0), epoch)
+        writer.add_scalar('Loss/Epoch/loss_cd', losses.avg(1), epoch)
+        writer.add_scalar('Loss/Epoch/loss_mse', losses.avg(2), epoch)
 
         if (epoch + 1) % config.train.ckpt_save_freq == 0:
             filename = os.path.join(args.log_file, f'model_{epoch}.pth')
@@ -54,7 +55,7 @@ def train(args, config, writer):
 
 
 def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epoch, writer):
-    losses = utils.AverageMeter(['loss_emd', 'all_loss'])
+    losses = utils.AverageMeter(['loss_emd', 'loss_cd', 'loss_mse'])
     n_batches = len(train_loader)
     model.train()
     for i, data in enumerate(train_loader):
@@ -63,18 +64,19 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         recon, p_feat, sp_feat = model(points)
 
         # loss and backward
-        loss_emd = criterion(points, recon)
-        loss = loss_emd
+        loss_emd, loss_mse, loss_cd = criterion(points, recon)
+        loss = loss_emd + loss_cd * 0.01
         loss /= batch_size
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         # summary
-        losses.update([loss_emd.item(), loss.item()])
+        losses.update([loss_emd.item(), loss_cd.item(), loss_mse.item()])
         n_itr = epoch * n_batches + i
-        writer.add_scalar('Loss/Batch/0_loss_emd', loss_emd.item(), n_itr)
-        writer.add_scalar('Loss/Batch/5_all_loss', loss.item(), n_itr)
+        writer.add_scalar('Loss/Batch/loss_emd', loss_emd.item(), n_itr)
+        writer.add_scalar('Loss/Batch/loss_cd', loss_cd.item(), n_itr)
+        writer.add_scalar('Loss/Batch/loss_mse', loss_mse.item(), n_itr)
         writer.add_scalar('Loss/Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
 
         torch.cuda.empty_cache()
@@ -82,7 +84,7 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
     print('[Training] EPOCH: %d Losses = %s' % (
         epoch, [(name, '%.4f' % value) for name, value in zip(losses.items, losses.avg())]))
     save_path = data['cate'][0] + '_' + str(np.array(data['id'][0])) + "_recon.ply"
-    write_ply(save_path, recon[0].cpu().detach().numpy())
+    write_ply(os.path.join(args.log_file, save_path), recon[0].cpu().detach().numpy())
     return losses
 
 
