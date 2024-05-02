@@ -8,9 +8,10 @@ import os
 
 synsetid_to_cate = {
     '517517': 'vessel',
+    '985211': 'vessel_all',
+    '594666': 'vessel_left',
     '02691156': 'airplane',
     '03001627': 'chair',
-
 }
 cate_to_synsetid = {v: k for k, v in synsetid_to_cate.items()}
 
@@ -23,8 +24,6 @@ class PCDataset(Dataset):
         assert scale_mode is None or scale_mode in ('global_unit', 'shape_unit', 'shape_bbox', 'shape_half', 'shape_34')
         self.data_path = data_path
         self.output_path = os.path.join(output_path, cates + '.hdf5')
-        if 'all' in cates:
-            cates = cate_to_synsetid.keys()
         self.cate_synsetids = cate_to_synsetid[cates]
         self.split = split
         self.scale_mode = scale_mode
@@ -35,11 +34,12 @@ class PCDataset(Dataset):
 
         if raw_data is not None:
             self.raw_data = raw_data
+            self.data_path = '../data/{}.hdf5'.format(cates)
             self.convert_to_hdf5()
-            self.get_statistics()
+        self.get_statistics()
         self.load()
 
-    def convert_to_hdf5(self, train_ratio=0.8):
+    def convert_to_hdf5(self, train_ratio=1):
 
         def read_ply(inputfile):
             plydata = PlyData.read(inputfile)

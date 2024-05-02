@@ -3,7 +3,9 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 from tensorboardX import SummaryWriter
 import time
+import sys
 
+sys.path.append('..')
 from segment.utils.dataset import *
 from segment.utils.config import *
 from segment.model.model import *
@@ -15,16 +17,23 @@ torch.autograd.set_detect_anomaly(True)
 
 def train(args, config, writer):
     train_dataset = PCDataset(data_path=args.input_data_path, output_path=args.data_save_path,
-                              cates=args.dataset, raw_data=None,
+                              cates=args.dataset,
+                              raw_data=None,
                               split='train', scale_mode=args.scale_mode, transform=None)
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size, num_workers=1)
+    if args.start_ckpts is not None:
+        model = SegGen(config)
+        pre_model = torch.load(args.start_ckpts)
+        model.encoder.load_state_dict(pre_model['encoder_state_dict'])
+        model = model.cuda()
+        for param in model.encoder.parameters():
+            param.requires_grad = False
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=config.train.learning_rate)
 
-    # build GMVAE
-    model = SegGen(config)
-    model = model.cuda()
-
-    # optimizer & scheduler
-    optimizer = optim.Adam(model.parameters(), lr=config.optimizer.kwargs.lr)
+    else:
+        model = SegGen(config)
+        model = model.cuda()
+        optimizer = optim.Adam(model.parameters(), lr=config.optimizer.kwargs.lr)
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.train.max_epoch)
 
     # Criterion
@@ -92,11 +101,11 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         # writer.add_scalar('Loss/Batch/loss_sp_balance', loss_sp_balance.item(), n_itr)
         writer.add_scalar('Loss/Batch/loss_inter', loss_inter.item(), n_itr)
         writer.add_scalar('Loss/Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
-
-        save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
-        write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
-        vis_cate(points[0].cpu().detach().numpy(), label[0].cpu().detach().numpy(), config,
-                 save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
+        if (i + 1) % 10 == 0:
+            save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
+            write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
+            vis_cate(points[0].cpu().detach().numpy(), label[0].cpu().detach().numpy(), config,
+                     save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
 
         torch.cuda.empty_cache()
 
