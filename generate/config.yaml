@@ -46,6 +46,6 @@ dataset: {
 
 train: {
   batch_size: 128, # 4096*4
-  max_epoch: 600,
-  ckpt_save_freq: 100,
+  max_epoch: 2000,
+  ckpt_save_freq: 500,
 }

@@ -15,13 +15,13 @@ class SegGen(nn.Module):
         self.attention_layer = nn.Sequential(
             nn.Conv1d(2048, self.superpoint_num, 1)
         )
-        self.decoder = Decoder(config)
+        self.decoder = PointNetDecoder(config)
 
     def forward(self, points):
         p_feat = self.encoder(points)  # B N C
         sp_feat = self.attention_layer(p_feat)  # B 50(sp num) N
 
-        recon_points = self.decoder(sp_feat.transpose(2, 1))
+        recon_points = self.decoder(sp_feat)
         return recon_points, p_feat, sp_feat
 
     def get_loss(self, points, recon):
@@ -33,4 +33,3 @@ class SegGen(nn.Module):
         dist1, dist2, idx1, idx2 = chd(points, recon)
         loss_cd = (torch.mean(dist1)) + (torch.mean(dist2))
         return loss_emd, loss_mse, loss_cd
-        # return loss_mses

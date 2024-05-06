@@ -48,8 +48,6 @@ import torch.nn as nn
 #
 #         # Returns both mean and logvariance, just ignore the latter in deteministic cases.
 #         return m, v
-
-
 class PointNetEncoder(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -66,24 +64,20 @@ class PointNetEncoder(nn.Module):
         x = F.relu(self.bn2(self.conv2(x)))
         x = self.bn3(self.conv3(x))
         p_feature = x.transpose(1, 2)
-        g_feature = torch.max(x, 2, keepdim=True)[0]
-        g_feature = g_feature.view(-1, 1, 256)
-        g_feat_repeated = g_feature.repeat(1, points.shape[1], 1)
-        feature = torch.concat([p_feature, g_feat_repeated], -1)
-        return feature
+        return p_feature
 
 
 class PointNetDecoder(nn.Module):
     def __init__(self, config):
         super().__init__()
+        self.latent_dim = 256
         self.fc1 = nn.Linear(self.latent_dim, 256)
         self.fc2 = nn.Linear(256, 256)
-        self.fc3 = nn.Linear(256, 2048 * 3)
+        self.fc3 = nn.Linear(256, 256 * 6)
 
     def forward(self, feature):
         x = F.relu(self.fc1(feature))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         recon_points = x.view(-1, 2048, 3)
-
         return recon_points

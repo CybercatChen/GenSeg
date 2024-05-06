@@ -3,7 +3,9 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 from tensorboardX import SummaryWriter
 import time
+import sys
 
+sys.path.append('..')
 from generate.utils.config import *
 from generate.utils import parser, utils
 from generate.utils.dataset import *
@@ -30,29 +32,23 @@ def train(args, config, writer):
     # Criterion
     criterion = model.get_loss
 
-    best_loss = float('inf')
     for epoch in range(config.train.max_epoch):
         # train
         losses = train_one_epoch(args, config, model, train_loader, optimizer, criterion, epoch, writer)
         scheduler.step()
-
-        is_best = False
 
         writer.add_scalar('Loss/Epoch/loss_emd', losses.avg(0), epoch)
         writer.add_scalar('Loss/Epoch/loss_cd', losses.avg(1), epoch)
         writer.add_scalar('Loss/Epoch/loss_mse', losses.avg(2), epoch)
 
         if (epoch + 1) % config.train.ckpt_save_freq == 0:
-            filename = os.path.join(args.log_file, f'model_{epoch}.pth')
-            print(f'Saving checkpoint to: {filename}')
-            torch.save({
-                'epoch': epoch,
-                'state_dict': model.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'scheduler': scheduler.state_dict(),
-                'best_loss': best_loss,
-                'is_best': is_best
-            }, filename)
+            filename_encoder = os.path.join(args.log_file, f'encoder_{epoch}.pth')
+            filename_decoder = os.path.join(args.log_file, f'decoder_{epoch}.pth')
+            print(f'Saving encoder checkpoint to: {filename_encoder}')
+            print(f'Saving decoder checkpoint to: {filename_decoder}')
+
+            torch.save(model.encoder.state_dict(), filename_encoder)
+            torch.save(model.decoder.state_dict(), filename_decoder)
 
 
 def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epoch, writer):
@@ -66,7 +62,7 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
 
         # loss and backward
         loss_emd, loss_mse, loss_cd = criterion(points, recon)
-        loss = loss_emd + loss_cd * 0.01
+        loss = loss_emd + loss_cd
         loss /= batch_size
         optimizer.zero_grad()
         loss.backward()
@@ -79,13 +75,13 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         writer.add_scalar('Loss/Batch/loss_cd', loss_cd.item(), n_itr)
         writer.add_scalar('Loss/Batch/loss_mse', loss_mse.item(), n_itr)
         writer.add_scalar('Loss/Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
-
+        if (i + 1) % 10 == 0:
+            save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
+            write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
         torch.cuda.empty_cache()
 
     print('[Training] EPOCH: %d Losses = %s' % (
         epoch, [(name, '%.4f' % value) for name, value in zip(losses.items, losses.avg())]))
-    save_path = data['cate'][0] + '_' + str(np.array(data['id'][0])) + "_recon.ply"
-    write_ply(os.path.join(args.log_file, save_path), recon[0].cpu().detach().numpy())
     return losses
 
 

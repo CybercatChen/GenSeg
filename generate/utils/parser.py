@@ -14,7 +14,7 @@ def get_args():
     # args
     parser.add_argument('--gpu', type=int, default=0, help='the number of gpu to use')
     parser.add_argument('--num_workers', type=int, default=1)
-    parser.add_argument('--config', type=str, default='../segment/config.yaml', help='yaml config file path')
+    parser.add_argument('--config', type=str, default='../generate/config.yaml', help='yaml config file path')
     parser.add_argument('--exp_name', type=str, default='default', help='experiment name')
 
     # train args
