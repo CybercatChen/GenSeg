@@ -16,9 +16,9 @@ class SegGen(nn.Module):
         self.atten_encoder = PointNetEncoder(config)
 
         self.attention_layer = nn.Sequential(
-            nn.Conv1d(512, self.superpoint_num, 1)
+            nn.Conv1d(256, self.superpoint_num, 1)
         )
-        self.decoder = Decoder(config)
+        self.decoder = PointNetDecoder(config)
 
     def forward(self, points):
         p_feat = self.encoder(points)  # B N C
@@ -29,7 +29,7 @@ class SegGen(nn.Module):
         sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2),
                             p_feat)  # B 50(sp num) C, l1-norm on attention map last dim: dim-2
         label = torch.argmax(sp_atten.transpose(1, 2), axis=-1)
-        recon_points = self.decoder(sp_feat.transpose(2, 1))
+        recon_points = self.decoder(sp_feat)
         return recon_points, p_feat, sp_feat, sp_atten, label
 
     def get_loss(self, points, recon, p_feat, sp_feat, sp_atten):

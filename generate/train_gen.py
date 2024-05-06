@@ -7,7 +7,8 @@ import sys
 
 sys.path.append('..')
 from generate.utils.config import *
-from generate.utils import parser, utils
+from generate.utils import utils
+from generate import parser
 from generate.utils.dataset import *
 from generate.model.model import *
 from generate.utils.visualize import *

@@ -4,7 +4,7 @@ from generate.utils.dataset import *
 from generate.model.model import *
 from generate.utils.config import *
 from generate.utils.utils import *
-from generate.utils import parser
+from generate import parser
 
 
 def test(args, config):

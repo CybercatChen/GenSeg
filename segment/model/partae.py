@@ -90,7 +90,7 @@ class Decoder(nn.Module):
         assert len(self.input_dim) > 0
 
         self.input_layer = nn.Sequential(
-            nn.Conv1d(self.input_dim[-1] * 2, self.input_dim[0], 1),
+            nn.Conv1d(self.input_dim[-1], self.input_dim[0], 1),
             nn.BatchNorm1d(self.input_dim[0]),
         )
 

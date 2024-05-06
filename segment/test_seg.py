@@ -4,7 +4,7 @@ from segment.utils.dataset import *
 from superpoint import SuperPoint
 from segment.utils.config import *
 from segment.utils.utils import *
-from segment.utils import parser
+from segment import parser
 
 
 def test(args, config):
