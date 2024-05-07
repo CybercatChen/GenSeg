@@ -29,11 +29,11 @@ def train(args, config, writer):
         for param in model.encoder.parameters():
             param.requires_grad = False
 
-        if args.start_ckpts_decoder is not None:
-            pre_decoder = torch.load(args.start_ckpts_decoder)
-            model.decoder.load_state_dict(pre_decoder)
-            for param in model.decoder.parameters():
-                param.requires_grad = False
+        # if args.start_ckpts_decoder is not None:
+        #     pre_decoder = torch.load(args.start_ckpts_decoder)
+        #     model.decoder.load_state_dict(pre_decoder)
+        #     for param in model.decoder.parameters():
+        #         param.requires_grad = False
         model = model.cuda()
 
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=config.optimizer.kwargs.lr)
@@ -89,7 +89,7 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         # loss and backward
         loss_emd, loss_mse, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter \
             = criterion(points, recon, p_feat, sp_feat, sp_atten)
-        loss = loss_emd + loss_inter + loss_sp_balance * 0.01 + loss_ss + loss_loc
+        loss = loss_emd + loss_inter * 100 + loss_sp_balance * 0.01 + loss_ss + loss_loc
         loss /= batch_size
         optimizer.zero_grad()
         loss.backward()
