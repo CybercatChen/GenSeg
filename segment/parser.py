@@ -5,10 +5,10 @@ from pathlib import Path
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='vessel_left')
+    parser.add_argument('--dataset', type=str, default='chair')
     parser.add_argument('--data_save_path', type=str, default=r'../data/')
-    parser.add_argument('--input_data_path', type=str, default=r'../data/vessel_left.hdf5')
-    parser.add_argument('--scale_mode', type=str, default='global_unit')
+    parser.add_argument('--input_data_path', type=str, default=r'../data/shapenet.hdf5')
+    parser.add_argument('--scale_mode', type=str, default=None)
     parser.add_argument('--train_batch_size', default=128, type=int)
     parser.add_argument('--val_batch_size', default=128, type=int)
     parser.add_argument('--log_dir', type=str, default='./logs')
@@ -20,13 +20,9 @@ def get_args():
     parser.add_argument('--exp_name', type=str, default='default', help='experiment name')
 
     # train args
-    parser.add_argument('--start_ckpts_encoder', type=str, default='../generate/logs/2024-05-07-19-09-26/encoder_999.pth',
+    parser.add_argument('--start_ckpts_encoder', type=str,
+                        default='../generate/logs/2024-05-06-17-42-35/encoder_999.pth',
                         help='reload used ckpt path')
-    parser.add_argument('--start_ckpts_decoder', type=str, default='../generate/logs/2024-05-06-17-42-35/decoder_999.pth',
-                        help='reload used ckpt path')
-    parser.add_argument('--val_freq', type=int, default=1, help='test freq')
-    parser.add_argument('--resume', action='store_true', default=False,
-                        help='autoresume training (interrupted by accident)')
 
     # test args
     parser.add_argument('--test', action='store_true', default=False, help='test mode for certain ckpt')

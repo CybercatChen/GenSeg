@@ -22,25 +22,21 @@ def train(args, config, writer):
                               raw_data=None,
                               split='train', scale_mode=args.scale_mode, transform=None)
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size, num_workers=1)
-    # if args.start_ckpts_encoder is not None:
-    #     model = SegGen(config)
-    #     pre_encoder = torch.load(args.start_ckpts_encoder)
-    #     model.encoder.load_state_dict(pre_encoder)
-    #     for param in model.encoder.parameters():
-    #         param.requires_grad = False
-        # if args.start_ckpts_decoder is not None:
-        #     pre_decoder = torch.load(args.start_ckpts_decoder)
-        #     model.decoder.load_state_dict(pre_decoder)
-        #     for param in model.decoder.parameters():
-        #         param.requires_grad = False
-    #     model = model.cuda()
-    #     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
-    #                                  lr=config.optimizer.kwargs.lr)
-    #
-    # else:
-    model = SegGen(config)
-    model = model.cuda()
-    optimizer = optim.Adam(model.parameters(), lr=config.optimizer.kwargs.lr)
+    if args.start_ckpts_encoder is not None:
+        model = SegGen(config)
+        pre_encoder = torch.load(args.start_ckpts_encoder)
+        model.encoder.load_state_dict(pre_encoder)
+        for param in model.encoder.parameters():
+            param.requires_grad = False
+
+        model = model.cuda()
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
+                                     lr=config.optimizer.kwargs.lr)
+
+    else:
+        model = SegGen(config)
+        model = model.cuda()
+        optimizer = optim.Adam(model.parameters(), lr=config.optimizer.kwargs.lr)
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.train.max_epoch)
 
     # Criterion
