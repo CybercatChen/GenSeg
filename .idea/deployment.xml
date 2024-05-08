@@ -13,7 +13,7 @@
       <paths name="tsinghua">
         <serverdata>
           <mappings>
-            <mapping deploy="/GenSeg" local="$PROJECT_DIR$" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

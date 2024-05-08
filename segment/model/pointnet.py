@@ -28,7 +28,7 @@ class PointNetDecoder(nn.Module):
         self.latent_dim = 256
         self.fc1 = nn.Linear(self.latent_dim, 256)
         self.fc2 = nn.Linear(256, 256)
-        self.fc3 = nn.Linear(256, 256 * 6)
+        self.fc3 = nn.Linear(256, 1024)
 
     def forward(self, feature):
         x = F.relu(self.fc1(feature))

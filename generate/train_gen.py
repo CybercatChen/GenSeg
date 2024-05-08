@@ -38,9 +38,9 @@ def train(args, config, writer):
         losses = train_one_epoch(args, config, model, train_loader, optimizer, criterion, epoch, writer)
         scheduler.step()
 
-        writer.add_scalar('Loss/Epoch/loss_emd', losses.avg(0), epoch)
-        writer.add_scalar('Loss/Epoch/loss_cd', losses.avg(1), epoch)
-        writer.add_scalar('Loss/Epoch/loss_mse', losses.avg(2), epoch)
+        writer.add_scalar('Epoch/loss_emd', losses.avg(0), epoch)
+        writer.add_scalar('Epoch/loss_cd', losses.avg(1), epoch)
+        writer.add_scalar('Epoch/loss_mse', losses.avg(2), epoch)
 
         if (epoch + 1) % config.train.ckpt_save_freq == 0:
             filename_encoder = os.path.join(args.log_file, f'encoder_{epoch}.pth')
@@ -72,13 +72,14 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         # summary
         losses.update([loss_emd.item(), loss_cd.item(), loss_mse.item()])
         n_itr = epoch * n_batches + i
-        writer.add_scalar('Loss/Batch/loss_emd', loss_emd.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_cd', loss_cd.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_mse', loss_mse.item(), n_itr)
-        writer.add_scalar('Loss/Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
-        if (i + 1) % 10 == 0:
+        writer.add_scalar('Batch/loss_emd', loss_emd.item(), n_itr)
+        writer.add_scalar('Batch/loss_cd', loss_cd.item(), n_itr)
+        writer.add_scalar('Batch/loss_mse', loss_mse.item(), n_itr)
+        writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
+        if ((i + 1) % 4 == 0) & (epoch % 5 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
+            write_ply(os.path.join(args.log_file, save_path + "_data.ply"), points[0].cpu().detach().numpy())
         torch.cuda.empty_cache()
 
     print('[Training] EPOCH: %d Losses = %s' % (

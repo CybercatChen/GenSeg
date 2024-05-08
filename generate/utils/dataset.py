@@ -10,6 +10,7 @@ synsetid_to_cate = {
     '517517': 'vessel',
     '02691156': 'airplane',
     '03001627': 'chair',
+    '594666': 'vessel_left'
 }
 cate_to_synsetid = {v: k for k, v in synsetid_to_cate.items()}
 
@@ -35,7 +36,7 @@ class PCDataset(Dataset):
         if raw_data is not None:
             self.raw_data = raw_data
             self.convert_to_hdf5()
-            self.get_statistics()
+        self.get_statistics()
         self.load()
 
     def convert_to_hdf5(self, train_ratio=0.8):

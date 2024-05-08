@@ -22,26 +22,25 @@ def train(args, config, writer):
                               raw_data=None,
                               split='train', scale_mode=args.scale_mode, transform=None)
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size, num_workers=1)
-    if args.start_ckpts_encoder is not None:
-        model = SegGen(config)
-        pre_encoder = torch.load(args.start_ckpts_encoder)
-        model.encoder.load_state_dict(pre_encoder)
-        for param in model.encoder.parameters():
-            param.requires_grad = False
-
+    # if args.start_ckpts_encoder is not None:
+    #     model = SegGen(config)
+    #     pre_encoder = torch.load(args.start_ckpts_encoder)
+    #     model.encoder.load_state_dict(pre_encoder)
+    #     for param in model.encoder.parameters():
+    #         param.requires_grad = False
         # if args.start_ckpts_decoder is not None:
         #     pre_decoder = torch.load(args.start_ckpts_decoder)
         #     model.decoder.load_state_dict(pre_decoder)
         #     for param in model.decoder.parameters():
         #         param.requires_grad = False
-        model = model.cuda()
-
-        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=config.optimizer.kwargs.lr)
-
-    else:
-        model = SegGen(config)
-        model = model.cuda()
-        optimizer = optim.Adam(model.parameters(), lr=config.optimizer.kwargs.lr)
+    #     model = model.cuda()
+    #     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
+    #                                  lr=config.optimizer.kwargs.lr)
+    #
+    # else:
+    model = SegGen(config)
+    model = model.cuda()
+    optimizer = optim.Adam(model.parameters(), lr=config.optimizer.kwargs.lr)
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.train.max_epoch)
 
     # Criterion
@@ -55,13 +54,13 @@ def train(args, config, writer):
 
         is_best = False
 
-        writer.add_scalar('Loss/Epoch/loss_emd', losses.avg(0), epoch)
-        writer.add_scalar('Loss/Epoch/loss_cd', losses.avg(1), epoch)
-        writer.add_scalar('Loss/Epoch/loss_mse', losses.avg(2), epoch)
-        writer.add_scalar('Loss/Epoch/loss_ss', losses.avg(3), epoch)
-        writer.add_scalar('Loss/Epoch/loss_loc', losses.avg(4), epoch)
-        writer.add_scalar('Loss/Epoch/loss_sp_balance', losses.avg(5), epoch)
-        writer.add_scalar('Loss/Epoch/loss_inter', losses.avg(6), epoch)
+        writer.add_scalar('Epoch/loss_emd', losses.avg(0), epoch)
+        writer.add_scalar('Epoch/loss_cd', losses.avg(1), epoch)
+        writer.add_scalar('Epoch/loss_mse', losses.avg(2), epoch)
+        writer.add_scalar('Epoch/loss_ss', losses.avg(3), epoch)
+        writer.add_scalar('Epoch/loss_loc', losses.avg(4), epoch)
+        writer.add_scalar('Epoch/loss_sp_balance', losses.avg(5), epoch)
+        writer.add_scalar('Epoch/loss_inter', losses.avg(6), epoch)
 
         if (epoch + 1) % config.train.ckpt_save_freq == 0:
             filename = os.path.join(args.log_file, f'model_{epoch}.pth')
@@ -85,11 +84,11 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
         recon, p_feat, sp_feat, sp_atten, label = model(points)
-
+        p_feat_matrix = p_feat.cpu().detach().numpy()
         # loss and backward
         loss_emd, loss_mse, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter \
             = criterion(points, recon, p_feat, sp_feat, sp_atten)
-        loss = loss_emd + loss_inter * 100 + loss_sp_balance * 0.01 + loss_ss + loss_loc
+        loss = loss_emd + loss_inter + loss_sp_balance * 0.01 + loss_ss + loss_loc
         loss /= batch_size
         optimizer.zero_grad()
         loss.backward()
@@ -101,15 +100,15 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
                        loss_loc.item(), loss_sp_balance.item(),
                        loss_inter.item()])
         n_itr = epoch * n_batches + i
-        writer.add_scalar('Loss/Batch/loss_emd', loss_emd.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_cd', loss_cd.item(), n_itr)
-        # writer.add_scalar('Loss/Batch/loss_mse', loss_mse.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_ss', loss_ss.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_loc', loss_loc.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_sp_balance', loss_sp_balance.item(), n_itr)
-        writer.add_scalar('Loss/Batch/loss_inter', loss_inter.item(), n_itr)
-        writer.add_scalar('Loss/Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
-        if (i + 1) % 10 == 0:
+        writer.add_scalar('Batch/loss_emd', loss_emd.item(), n_itr)
+        writer.add_scalar('Batch/loss_cd', loss_cd.item(), n_itr)
+        # writer.add_scalar('Batch/loss_mse', loss_mse.item(), n_itr)
+        writer.add_scalar('Batch/loss_ss', loss_ss.item(), n_itr)
+        writer.add_scalar('Batch/loss_loc', loss_loc.item(), n_itr)
+        writer.add_scalar('Batch/loss_sp_balance', loss_sp_balance.item(), n_itr)
+        writer.add_scalar('Batch/loss_inter', loss_inter.item(), n_itr)
+        writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
+        if ((i + 1) % 2 == 0) & (epoch % 10 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
             vis_cate(points[0].cpu().detach().numpy(), label[0].cpu().detach().numpy(), config,

@@ -18,7 +18,7 @@ model: {
     hidden_dim: [64, 256, 1024],
   },
 #  superpoint_num: 50,
-  superpoint_num: 4,
+  superpoint_num: 6,
   mlp_hidden_dim: [256, 64],
   param_num: 14,
 }
@@ -47,5 +47,5 @@ dataset: {
 train: {
   batch_size: 128, # 4096*4
   max_epoch: 1000,
-  ckpt_save_freq: 100,
+  ckpt_save_freq: 200,
 }
