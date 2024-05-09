@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J vessel       # job name, optional
+#SBATCH -J part       # job name, optional
 #SBATCH -N 1          # number of computing node
 #SBATCH -c 5          # number of cpus, for multi-thread programs
 #SBATCH --gres=gpu:1  # number of gpus allocated on each node
