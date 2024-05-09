@@ -11,41 +11,13 @@ scheduler: {
 }}
 
 model: {
-  encoder: {
-    input_dim: 3,
-    output_dim: [512, 256],
-    use_global: True,
-    hidden_dim: [64, 256, 1024],
-  },
-#  superpoint_num: 50,
-  superpoint_num: 6,
-  mlp_hidden_dim: [256, 64],
-  param_num: 14,
-}
-
-dataset: {
-  NAME: StyleDataset,
-  DATA_ROOT: ../Point-BERT/data/style/building,
-  DATA_DIR: pc,
-  SPLIT_DIR: split,
-  N_POINTS: 20000,
-
-  train: {
-    npoints: 2048,
-  },
-  test: {
-    npoints: 2048,
-  },
-  val: {
-    npoints: 2048,
-  },
-  whole: {
-    npoints: 2048,
-  },
+  part_num: 4,
+  part_decoder: True,
 }
 
 train: {
-  batch_size: 128, # 4096*4
+  batch_size: 128,
+  data_point: 2048,
   max_epoch: 1000,
   ckpt_save_freq: 200,
 }

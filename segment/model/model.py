@@ -10,15 +10,15 @@ from segment.model.partae import *
 class SegGen(nn.Module):
     def __init__(self, config=None):
         super().__init__()
-        self.superpoint_num = config.model.superpoint_num
+        self.part_num = config.model.part_num
 
         self.encoder = PointNetEncoder(config)
         self.atten_encoder = PointNetEncoder(config)
 
         self.attention_layer = nn.Sequential(
-            nn.Conv1d(256, self.superpoint_num, 1)
+            nn.Conv1d(256, self.part_num, 1)
         )
-        self.decoder = PointNetDecoder(config)
+        self.decoder = PartDecoder(config)
 
     def forward(self, points):
         p_feat = self.encoder(points)  # B N C
@@ -32,7 +32,7 @@ class SegGen(nn.Module):
         recon_points = self.decoder(sp_feat)
         return recon_points, p_feat, sp_feat, sp_atten, label
 
-    def get_loss(self, points, recon, p_feat, sp_feat, sp_atten):
+    def get_loss(self, points, part_points, recon, p_feat, sp_feat, sp_atten):
         B, N, C = p_feat.shape
         _, M, _ = sp_atten.shape
         # ss loss
@@ -66,11 +66,12 @@ class SegGen(nn.Module):
         similarity_matrix = similarity_matrix * (1 - mask) + (-1e9) * mask
         max_similarity, _ = torch.max(similarity_matrix, dim=-1)  # B M
         loss_inter = torch.mean(max_similarity)
-
-        loss_emd = emd.earth_mover_distance(recon.transpose(2, 1), points.transpose(2, 1)).sum()
-        loss_mse = F.mse_loss(points, recon, reduction='mean')
-
+        loss_emd = 0
+        loss_cd = 0
         chd = chamfer_dist()
-        dist1, dist2, idx1, idx2 = chd(points, recon)
-        loss_cd = (torch.mean(dist1)) + (torch.mean(dist2))
-        return loss_emd, loss_mse, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter
+
+        for i in range(len(recon)):
+            loss_emd += emd.earth_mover_distance(recon[i].transpose(2, 1), part_points[i].transpose(2, 1)).sum()
+            dist1, dist2, idx1, idx2 = chd(part_points[i], recon[i])
+            loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
+        return loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter

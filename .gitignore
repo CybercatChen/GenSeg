@@ -3,7 +3,4 @@
 /segment/logs
 /script/metrics
 /script/pyTorchChamferDistance
-/segment/submit.sh
-/segment/submit1.sh
-/generate/submit1.sh
-/generate/submit.sh
+/.idea

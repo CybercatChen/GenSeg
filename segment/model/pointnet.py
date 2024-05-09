@@ -26,13 +26,39 @@ class PointNetDecoder(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.latent_dim = 256
+        self.data_point = config.train.data_point
+        # if config.model.part_decoder is True:
+        #     self.data_point = config.train.data_point // config.model.part_num
+
         self.fc1 = nn.Linear(self.latent_dim, 256)
         self.fc2 = nn.Linear(256, 256)
-        self.fc3 = nn.Linear(256, 1024)
+        # self.fc3 = nn.Linear(256, 1024)
+        self.fc3 = nn.Linear(256, self.data_point * 3)
 
     def forward(self, feature):
         x = F.relu(self.fc1(feature))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
-        recon_points = x.view(-1, 2048, 3)
+        recon_points = x.view(-1, self.data_point, 3)
         return recon_points
+
+
+class PartDecoder(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+
+        self.num_parts = config.model.part_num
+        self.decoders = nn.ModuleList([PointNetDecoder(config) for _ in range(self.num_parts)])
+
+    def forward(self, part_features):
+        B, M, E = part_features.shape
+        assert M == self.num_parts
+
+        recon_parts = []
+        for i in range(self.num_parts):
+            part_feature = part_features[:, i, :].unsqueeze(1)  # B 1 E
+            reconstructed_part = self.decoders[i](part_feature)  # B N 3
+            recon_parts.append(reconstructed_part)
+        # reconstructed_object = torch.cat(reconstructed_parts, dim=1)  # B (M*N) 3
+
+        return recon_parts
