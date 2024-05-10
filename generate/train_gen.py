@@ -88,6 +88,6 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
 if __name__ == '__main__':
     args = parser.get_args()
     timestamp = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
-    args.log_file = os.path.join(args.log_dir, f'{timestamp}')
+    args.log_file = os.path.join(args.log_dir, args.dataset, f'{timestamp}')
     writer = SummaryWriter(args.log_file)
     train(args, writer)

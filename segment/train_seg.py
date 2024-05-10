@@ -93,7 +93,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         writer.add_scalar('Batch/loss_inter', loss_inter.item(), n_itr)
         writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
 
-        if ((i + 1) % 4 == 0) & (epoch % 10 == 0):
+        if ((i + 1) % 6 == 0) & (epoch % 20 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             part_recon = torch.stack([points[0] for points in recon], dim=0)
             write_ply_with_color(os.path.join(args.log_file, save_path + "_recon.ply"),
@@ -112,6 +112,6 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
 if __name__ == '__main__':
     args = parser.get_args()
     timestamp = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
-    args.log_file = os.path.join(args.log_dir, f'{timestamp}')
+    args.log_file = os.path.join(args.log_dir, args.dataset, f'{timestamp}')
     writer = SummaryWriter(args.log_file)
     train(args, writer)

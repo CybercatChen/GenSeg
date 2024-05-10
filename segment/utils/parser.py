@@ -4,9 +4,9 @@ import argparse
 def get_args():
     parser = argparse.ArgumentParser()
     # Dataset
-    parser.add_argument('--dataset', type=str, default='vessel_left')
-    parser.add_argument('--data_save_path', type=str, default=r'../data/')
-    parser.add_argument('--input_data_path', type=str, default=r'../data/vessel_left.hdf5')
+    parser.add_argument('--dataset', type=str, default='chair')
+    parser.add_argument('--data_save_path', type=str, default='../data/')
+    parser.add_argument('--input_data_path', type=str, default='../data/shapenet.hdf5')
     parser.add_argument('--scale_mode', type=str, default='global_unit')
     parser.add_argument('--data_point', default=2048, type=int)
 
@@ -18,7 +18,7 @@ def get_args():
 
     parser.add_argument('--ckpt_save_freq', default=400, type=int)
     parser.add_argument('--start_ckpts_encoder', type=str,
-                        default='../generate/logs/2024-05-07-19-09-26/encoder_1999.pth')
+                        default='../generate/logs/2024-05-06-17-42-35/encoder_999.pth')
     parser.add_argument('--log_dir', type=str, default='./logs')
 
     # Model
