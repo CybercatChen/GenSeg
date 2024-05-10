@@ -6,8 +6,7 @@ import time
 import sys
 
 sys.path.append('..')
-from generate.utils import utils
-from generate import parser
+from generate.utils import utils, parser
 from generate.utils.dataset import *
 from generate.model.model import *
 from generate.utils.visualize import *
@@ -90,5 +89,5 @@ if __name__ == '__main__':
     args = parser.get_args()
     timestamp = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
     args.log_file = os.path.join(args.log_dir, f'{timestamp}')
-    summarywriter = SummaryWriter(args.log_file)
-    train(args, summarywriter)
+    writer = SummaryWriter(args.log_file)
+    train(args, writer)

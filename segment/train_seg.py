@@ -69,7 +69,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
             class_mask = (labels == class_id).unsqueeze(2)
             class_points = torch.where(class_mask, points, 0)
             part_points.append(class_points)
-        # part_points = torch.concat(part_points, dim=1)
+
         # loss and backward
         loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter \
             = criterion(points, part_points, recon, p_feat, sp_feat, sp_atten)
@@ -95,8 +95,9 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
 
         if ((i + 1) % 4 == 0) & (epoch % 10 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
-            recon = torch.concat(recon, dim=1)
-            write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
+            part_recon = torch.stack([points[0] for points in recon], dim=0)
+            write_ply_with_color(os.path.join(args.log_file, save_path + "_recon.ply"),
+                                 part_recon.cpu().detach().numpy())
             vis_cate(points[0].cpu().detach().numpy(), labels[0].cpu().detach().numpy(), args,
                      save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
 

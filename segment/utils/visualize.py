@@ -27,3 +27,54 @@ def write_ply(filename, points):
 
     el = PlyElement.describe(vertex, 'vertex', comments=['vertices'])
     PlyData([el], text=True).write(filename)
+
+
+def write_ply_with_color(filename, points_list):
+    np.random.seed(seed=2024)
+    sp_colors = np.random.rand(len(points_list), 3)
+
+    all_points = np.concatenate(points_list, axis=0)
+    all_colors = np.concatenate(
+        [np.tile(sp_colors[idx], (points.shape[0], 1)) for idx, points in enumerate(points_list)], axis=0)
+
+    if np.max(all_colors) > 1 or np.min(all_colors) < 0:
+        all_colors = (all_colors - np.min(all_colors)) / (np.max(all_colors) - np.min(all_colors))
+    all_colors = (all_colors * 255).astype(int)
+
+    colored_points = [
+        (all_points[i, 0], all_points[i, 1], all_points[i, 2], all_colors[i, 0], all_colors[i, 1], all_colors[i, 2]) for
+        i in range(all_points.shape[0])]
+    vertex = np.array(colored_points,
+                      dtype=[('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('red', 'u1'), ('green', 'u1'), ('blue', 'u1')])
+
+    el_vertex = PlyElement.describe(vertex, 'vertex', comments=['vertices'])
+    PlyData([el_vertex], text=True).write(filename)
+
+#
+# def write_ply_with_color(filename, points_list):
+#     all_vertex = []
+#     all_colors = []
+#     np.random.seed(seed=2024)
+#     sp_colors = np.random.rand(len(points_list), 3)
+#
+#     for idx, points in enumerate(points_list):
+#         colors = np.tile(sp_colors[idx], (points.shape[0], 1))
+#
+#         if np.max(colors) > 1 or np.min(colors) < 0:
+#             colors = (colors - np.min(colors)) / (np.max(colors) - np.min(colors))
+#         colors = (colors * 255).astype(int)
+#
+#         all_vertex.append(points)
+#         all_colors.append(colors)
+#
+#     all_vertex = np.concatenate(all_vertex, axis=0)
+#     all_colors = np.concatenate(all_colors, axis=0)
+#
+#     colored_points = [
+#         (all_vertex[i, 0], all_vertex[i, 1], all_vertex[i, 2], all_colors[i, 0], all_colors[i, 1], all_colors[i, 2]) for
+#         i in range(all_vertex.shape[0])]
+#     vertex = np.array(colored_points,
+#                       dtype=[('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('red', 'u1'), ('green', 'u1'), ('blue', 'u1')])
+#
+#     el_vertex = PlyElement.describe(vertex, 'vertex', comments=['vertices'])
+#     PlyData([el_vertex], text=True).write(filename)
