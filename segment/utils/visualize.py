@@ -2,9 +2,9 @@ import numpy as np
 from plyfile import PlyData, PlyElement
 
 
-def vis_cate(points, label, config, save_path):
+def vis_cate(points, label, args, save_path):
     np.random.seed(seed=2024)
-    sp_colors = np.random.rand(config.model.part_num, 3)
+    sp_colors = np.random.rand(args.part_num, 3)
     colors = sp_colors[label].reshape(-1, 3)
 
     if np.max(colors) > 1 or np.min(colors) < 0:

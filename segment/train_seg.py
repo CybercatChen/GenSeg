@@ -1,4 +1,3 @@
-import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
@@ -8,22 +7,20 @@ import sys
 
 sys.path.append('..')
 from segment.utils.dataset import *
-from segment.utils.config import *
 from segment.model.model import *
-from segment.utils import utils
-from segment import parser
+from segment.utils import utils, parser
 from segment.utils.visualize import *
 
 torch.autograd.set_detect_anomaly(True)
 
 
-def train(args, config, writer):
+def train(args, writer):
     train_dataset = PCDataset(data_path=args.input_data_path, output_path=args.data_save_path,
                               cates=args.dataset,
                               raw_data=None,
                               split='train', scale_mode=args.scale_mode, transform=None)
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size, num_workers=1)
-    model = SegGen(config)
+    model = SegGen(args)
     pre_encoder = torch.load(args.start_ckpts_encoder)
     model.encoder.load_state_dict(pre_encoder)
     for param in model.encoder.parameters():
@@ -31,17 +28,17 @@ def train(args, config, writer):
 
     model = model.cuda()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
-                           lr=config.optimizer.kwargs.lr)
-    scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.train.max_epoch)
+                           lr=args.lr)
+    scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.max_epoch)
 
     print(repr(model))
     print(args)
     # Criterion
     criterion = model.get_loss
 
-    for epoch in range(config.train.max_epoch):
+    for epoch in range(args.max_epoch):
         # train
-        losses = train_one_epoch(args, config, model, train_loader, optimizer, criterion, epoch, writer)
+        losses = train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writer)
         scheduler.step()
 
         writer.add_scalar('Epoch/loss_emd', losses.avg(0), epoch)
@@ -51,13 +48,13 @@ def train(args, config, writer):
         writer.add_scalar('Epoch/loss_sp_balance', losses.avg(4), epoch)
         writer.add_scalar('Epoch/loss_inter', losses.avg(5), epoch)
 
-        if (epoch + 1) % config.train.ckpt_save_freq == 0:
+        if (epoch + 1) % args.ckpt_save_freq == 0:
             filename = os.path.join(args.log_file, f'model_{epoch}.pth')
             print(f'Saving checkpoint to: {filename}')
             torch.save(model.state_dict(), filename)
 
 
-def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epoch, writer):
+def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writer):
     losses = utils.AverageMeter(
         ['loss_emd', 'loss_cd', 'loss_ss', 'loss_loc', 'loss_sp_balance', 'loss_inter'])
     n_batches = len(train_loader)
@@ -68,7 +65,7 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
         recon, p_feat, sp_feat, sp_atten, labels = model(points)
 
         part_points = []
-        for class_id in range(config.model.part_num):
+        for class_id in range(args.part_num):
             class_mask = (labels == class_id).unsqueeze(2)
             class_points = torch.where(class_mask, points, 0)
             part_points.append(class_points)
@@ -100,7 +97,7 @@ def train_one_epoch(args, config, model, train_loader, optimizer, criterion, epo
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             recon = torch.concat(recon, dim=1)
             write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
-            vis_cate(points[0].cpu().detach().numpy(), labels[0].cpu().detach().numpy(), config,
+            vis_cate(points[0].cpu().detach().numpy(), labels[0].cpu().detach().numpy(), args,
                      save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
 
         torch.cuda.empty_cache()
@@ -115,6 +112,5 @@ if __name__ == '__main__':
     args = parser.get_args()
     timestamp = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
     args.log_file = os.path.join(args.log_dir, f'{timestamp}')
-    summarywriter = SummaryWriter(args.log_file)
-    config = get_config(args)
-    train(args, config, summarywriter)
+    writer = SummaryWriter(args.log_file)
+    train(args, writer)

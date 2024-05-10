@@ -49,7 +49,7 @@ import torch.nn as nn
 #         # Returns both mean and logvariance, just ignore the latter in deteministic cases.
 #         return m, v
 class PointNetEncoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, args):
         super().__init__()
         self.conv1 = nn.Conv1d(3, 64, 1)
         self.conv2 = nn.Conv1d(64, 128, 1)
@@ -68,7 +68,7 @@ class PointNetEncoder(nn.Module):
 
 
 class PointNetDecoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, args):
         super().__init__()
         self.latent_dim = 256
         self.fc1 = nn.Linear(self.latent_dim, 256)

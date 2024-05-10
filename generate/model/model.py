@@ -8,21 +8,21 @@ from generate.model.partae import *
 
 
 class SegGen(nn.Module):
-    def __init__(self, config=None):
+    def __init__(self, args=None):
         super().__init__()
-        self.superpoint_num = config.model.superpoint_num
-        self.encoder = PointNetEncoder(config)
+        self.part_num = args.part_num
+        self.encoder = PointNetEncoder(args)
         self.attention_layer = nn.Sequential(
-            nn.Conv1d(2048, self.superpoint_num, 1)
+            nn.Conv1d(2048, self.part_num, 1)
         )
-        self.decoder = PointNetDecoder(config)
+        self.decoder = PointNetDecoder(args)
 
     def forward(self, points):
         p_feat = self.encoder(points)  # B N C
-        sp_feat = self.attention_layer(p_feat)  # B 50(sp num) N
+        # sp_feat = self.attention_layer(p_feat)  # B 50(sp num) N
 
-        recon_points = self.decoder(sp_feat)
-        return recon_points, p_feat, sp_feat
+        recon_points = self.decoder(p_feat)
+        return recon_points, p_feat
 
     def get_loss(self, points, recon):
         # recon loss

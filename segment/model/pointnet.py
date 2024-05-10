@@ -4,7 +4,7 @@ import torch.nn as nn
 
 
 class PointNetEncoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, args):
         super().__init__()
         self.conv1 = nn.Conv1d(3, 64, 1)
         self.conv2 = nn.Conv1d(64, 128, 1)
@@ -23,12 +23,12 @@ class PointNetEncoder(nn.Module):
 
 
 class PointNetDecoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, args):
         super().__init__()
         self.latent_dim = 256
-        self.data_point = config.train.data_point
-        # if config.model.part_decoder is True:
-        #     self.data_point = config.train.data_point // config.model.part_num
+        self.data_point = args.data_point
+        # if args..part_decoder is True:
+        #     self.data_point = args..data_point // args..part_num
 
         self.fc1 = nn.Linear(self.latent_dim, 256)
         self.fc2 = nn.Linear(256, 256)
@@ -44,11 +44,11 @@ class PointNetDecoder(nn.Module):
 
 
 class PartDecoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, args):
         super().__init__()
 
-        self.num_parts = config.model.part_num
-        self.decoders = nn.ModuleList([PointNetDecoder(config) for _ in range(self.num_parts)])
+        self.num_parts = args.part_num
+        self.decoders = nn.ModuleList([PointNetDecoder(args) for _ in range(self.num_parts)])
 
     def forward(self, part_features):
         B, M, E = part_features.shape

@@ -8,17 +8,17 @@ from segment.model.partae import *
 
 
 class SegGen(nn.Module):
-    def __init__(self, config=None):
+    def __init__(self, args):
         super().__init__()
-        self.part_num = config.model.part_num
+        self.part_num = args.part_num
 
-        self.encoder = PointNetEncoder(config)
-        self.atten_encoder = PointNetEncoder(config)
+        self.encoder = PointNetEncoder(args)
+        self.atten_encoder = PointNetEncoder(args)
 
         self.attention_layer = nn.Sequential(
             nn.Conv1d(256, self.part_num, 1)
         )
-        self.decoder = PartDecoder(config)
+        self.decoder = PartDecoder(args)
 
     def forward(self, points):
         p_feat = self.encoder(points)  # B N C
