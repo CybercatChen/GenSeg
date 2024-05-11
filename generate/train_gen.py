@@ -24,6 +24,9 @@ def train(args, writer):
     model = SegGen(args)
     model = model.cuda()
 
+    print(repr(model))
+    print(args)
+
     # optimizer & scheduler
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.max_epoch)
@@ -58,7 +61,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
         recon, p_feat = model(points)
-
+        p_feat_np = p_feat.cpu().detach().numpy()
         # loss and backward
         loss_emd, loss_mse, loss_cd = criterion(points, recon)
         loss = loss_emd + loss_cd
@@ -74,7 +77,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         writer.add_scalar('Batch/loss_cd', loss_cd.item(), n_itr)
         writer.add_scalar('Batch/loss_mse', loss_mse.item(), n_itr)
         writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
-        if ((i + 1) % 5 == 0) & (epoch % 10 == 0):
+        if ((i + 1) % 2 == 0) & (epoch % 10 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
             write_ply(os.path.join(args.log_file, save_path + "_data.ply"), points[0].cpu().detach().numpy())

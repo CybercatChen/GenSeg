@@ -1,5 +1,4 @@
 import torch.nn.functional as F
-import torch
 import torch.nn as nn
 
 
@@ -27,12 +26,11 @@ class PointNetDecoder(nn.Module):
         super().__init__()
         self.latent_dim = 256
         self.data_point = args.data_point
-        # if args..part_decoder is True:
-        #     self.data_point = args..data_point // args..part_num
+        if args.part_decoder is True:
+            self.data_point = 400
 
         self.fc1 = nn.Linear(self.latent_dim, 256)
         self.fc2 = nn.Linear(256, 256)
-        # self.fc3 = nn.Linear(256, 1024)
         self.fc3 = nn.Linear(256, self.data_point * 3)
 
     def forward(self, feature):

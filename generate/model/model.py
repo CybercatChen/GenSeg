@@ -12,9 +12,6 @@ class SegGen(nn.Module):
         super().__init__()
         self.part_num = args.part_num
         self.encoder = PointNetEncoder(args)
-        self.attention_layer = nn.Sequential(
-            nn.Conv1d(2048, self.part_num, 1)
-        )
         self.decoder = PointNetDecoder(args)
 
     def forward(self, points):

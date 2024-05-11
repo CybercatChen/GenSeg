@@ -71,7 +71,8 @@ class SegGen(nn.Module):
         chd = chamfer_dist()
 
         for i in range(len(recon)):
-            loss_emd += emd.earth_mover_distance(recon[i].transpose(2, 1), part_points[i].transpose(2, 1)).sum()
-            dist1, dist2, idx1, idx2 = chd(part_points[i], recon[i])
+            loss_emd += emd.earth_mover_distance(recon[i].transpose(2, 1).to('cuda'),
+                                                 part_points[i].transpose(2, 1).to('cuda')).sum()
+            dist1, dist2, idx1, idx2 = chd(part_points[i].to('cuda'), recon[i].to('cuda'))
             loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
         return loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter

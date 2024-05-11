@@ -59,15 +59,41 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         ['loss_emd', 'loss_cd', 'loss_ss', 'loss_loc', 'loss_sp_balance', 'loss_inter'])
     n_batches = len(train_loader)
     model.train()
+
     for i, data in enumerate(train_loader):
         batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
         recon, p_feat, sp_feat, sp_atten, labels = model(points)
 
         part_points = []
+        desired_points_per_class = 400
         for class_id in range(args.part_num):
-            class_mask = (labels == class_id).unsqueeze(2)
-            class_points = torch.where(class_mask, points, 0)
+            class_mask = (labels == class_id)
+            class_points = torch.zeros((batch_size, desired_points_per_class, 3))
+            points[~class_mask] = 0
+            points_count = torch.sum(class_mask, dim=1)
+
+            undersampled_mask = points_count < desired_points_per_class
+            oversampled_mask = points_count > desired_points_per_class
+
+            for j in range(batch_size):
+                if points_count[j] == 0:
+                    class_points[j] = torch.zeros((desired_points_per_class, 3))
+                else:
+                    if undersampled_mask[j]:
+                        non_zero_indices = torch.nonzero(class_mask[j]).squeeze(1)
+                        random_indices = torch.randint(0, non_zero_indices.size(0), (desired_points_per_class,),
+                                                       device=non_zero_indices.device)
+                        selected_indices = non_zero_indices[random_indices]
+                        class_points[j] = points[j, selected_indices]
+
+                    elif oversampled_mask[j]:
+                        non_zero_indices = torch.nonzero(class_mask[j]).squeeze(1)
+                        random_indices = torch.randint(0, non_zero_indices.size(0), (desired_points_per_class,),
+                                                       device=non_zero_indices.device)
+                        selected_indices = non_zero_indices[random_indices]
+                        class_points[j] = points[j, non_zero_indices[random_indices]]
+
             part_points.append(class_points)
 
         # loss and backward
@@ -93,7 +119,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         writer.add_scalar('Batch/loss_inter', loss_inter.item(), n_itr)
         writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
 
-        if ((i + 1) % 6 == 0) & (epoch % 20 == 0):
+        if ((i + 1) % 1 == 0) & (epoch % 20 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             part_recon = torch.stack([points[0] for points in recon], dim=0)
             write_ply_with_color(os.path.join(args.log_file, save_path + "_recon.ply"),

@@ -10,7 +10,8 @@ synsetid_to_cate = {
     '517517': 'vessel',
     '02691156': 'airplane',
     '03001627': 'chair',
-    '594666': 'vessel_left'
+    '594666': 'vessel_left',
+    '985211': 'vessel_all'
 }
 cate_to_synsetid = {v: k for k, v in synsetid_to_cate.items()}
 
@@ -23,8 +24,6 @@ class PCDataset(Dataset):
         assert scale_mode is None or scale_mode in ('global_unit', 'shape_unit', 'shape_bbox', 'shape_half', 'shape_34')
         self.data_path = data_path
         self.output_path = os.path.join(output_path, cates + '.hdf5')
-        if 'all' in cates:
-            cates = cate_to_synsetid.keys()
         self.cate_synsetids = cate_to_synsetid[cates]
         self.split = split
         self.scale_mode = scale_mode

@@ -2,7 +2,6 @@ from torch.utils.data import DataLoader
 import open3d as o3d
 from generate.utils.dataset import *
 from generate.model.model import *
-from generate.utils.config import *
 from generate.utils.utils import *
 from generate.utils import parser
 
@@ -20,7 +19,7 @@ def visualize_latent_3d(latent, title):
     ax.set_title(title)
     plt.show()
 
-# 可视化降维后的潜变量至2维空间
+
 def visualize_latent_2d(latent, title):
     plt.scatter(latent[:, 0], latent[:, 1])
     plt.xlabel('Latent 1')
@@ -29,13 +28,13 @@ def visualize_latent_2d(latent, title):
     plt.show()
 
 
-def latent_vis(args, config):
+def latent_vis(args):
     train_dataset = PCDataset(data_path=args.input_data_path, output_path=args.data_save_path,
                               cates=args.dataset, raw_data=None,
                               split='train', scale_mode=args.scale_mode, transform=None)
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size, num_workers=1)
 
-    model = SegGen(config)
+    model = SegGen(args)
     pre_encoder = torch.load(args.start_ckpts_encoder)
     model.encoder.load_state_dict(pre_encoder)
     model = model.cuda()
@@ -59,14 +58,14 @@ def latent_vis(args, config):
     return latent
 
 
-def test(args, config):
+def test(args):
     test_dataset = PCDataset(data_path=args.input_data_path, raw_data=None, output_path=args.data_save_path,
                              cates=args.dataset,
                              split='val', scale_mode=args.scale_mode, transform=None)
     test_loader = DataLoader(test_dataset, batch_size=args.val_batch_size, num_workers=1)
 
     # load model
-    model = SegGen(config)
+    model = SegGen(args)
     model = model.cuda()
     checkpoint = torch.load(args.ckpt_path)
     model.load_state_dict(checkpoint['state_dict'], strict=True)
@@ -84,7 +83,7 @@ def test(args, config):
         vis_dir = os.path.join(args.log_dir, 'visualize')
         os.makedirs(vis_dir, exist_ok=True)
         np.random.seed(123)
-        sp_colors = np.random.rand(config.model.superpoint_num, 3)
+        sp_colors = np.random.rand(args.part_num, 3)
     losses = AverageMeter(['loss_fit', 'loss_ss', 'loss_loc', 'loss_sp_balance', 'all_loss'])
     model.eval()
     for i, data in enumerate(test_loader):
@@ -122,5 +121,4 @@ def test(args, config):
 
 if __name__ == '__main__':
     args = parser.get_args()
-    config = get_config(args)
-    latent_vis(args, config)
+    latent_vis(args)
