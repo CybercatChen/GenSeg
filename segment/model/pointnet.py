@@ -1,6 +1,6 @@
 import torch.nn.functional as F
 import torch.nn as nn
-
+import torch
 
 class PointNetEncoder(nn.Module):
     def __init__(self, args):
@@ -57,6 +57,6 @@ class PartDecoder(nn.Module):
             part_feature = part_features[:, i, :].unsqueeze(1)  # B 1 E
             reconstructed_part = self.decoders[i](part_feature)  # B N 3
             recon_parts.append(reconstructed_part)
-        # reconstructed_object = torch.cat(reconstructed_parts, dim=1)  # B (M*N) 3
+        recon_all = torch.cat(recon_parts, dim=1)  # B (M*N) 3
 
-        return recon_parts
+        return recon_parts, recon_all

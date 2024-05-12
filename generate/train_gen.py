@@ -45,12 +45,8 @@ def train(args, writer):
 
         if (epoch + 1) % args.ckpt_save_freq == 0:
             filename_encoder = os.path.join(args.log_file, f'encoder_{epoch}.pth')
-            filename_decoder = os.path.join(args.log_file, f'decoder_{epoch}.pth')
             print(f'Saving encoder checkpoint to: {filename_encoder}')
-            print(f'Saving decoder checkpoint to: {filename_decoder}')
-
             torch.save(model.encoder.state_dict(), filename_encoder)
-            torch.save(model.decoder.state_dict(), filename_decoder)
 
 
 def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writer):
@@ -77,7 +73,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         writer.add_scalar('Batch/loss_cd', loss_cd.item(), n_itr)
         writer.add_scalar('Batch/loss_mse', loss_mse.item(), n_itr)
         writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
-        if ((i + 1) % 2 == 0) & (epoch % 10 == 0):
+        if ((i + 10) % 2 == 0) & (epoch % 20 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
             write_ply(os.path.join(args.log_file, save_path + "_data.ply"), points[0].cpu().detach().numpy())

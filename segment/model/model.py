@@ -29,10 +29,10 @@ class SegGen(nn.Module):
         sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2),
                             p_feat)  # B 50(sp num) C, l1-norm on attention map last dim: dim-2
         label = torch.argmax(sp_atten.transpose(1, 2), axis=-1)
-        recon_points = self.decoder(sp_feat)
-        return recon_points, p_feat, sp_feat, sp_atten, label
+        recon_parts, recon_all = self.decoder(sp_feat)
+        return recon_parts, recon_all, p_feat, sp_feat, sp_atten, label
 
-    def get_loss(self, points, part_points, recon, p_feat, sp_feat, sp_atten):
+    def get_loss(self, points, recon_all, part_points, recon, p_feat, sp_feat, sp_atten):
         B, N, C = p_feat.shape
         _, M, _ = sp_atten.shape
         # ss loss
@@ -66,6 +66,9 @@ class SegGen(nn.Module):
         similarity_matrix = similarity_matrix * (1 - mask) + (-1e9) * mask
         max_similarity, _ = torch.max(similarity_matrix, dim=-1)  # B M
         loss_inter = torch.mean(max_similarity)
+
+        # loss recon
+        # part recon
         loss_emd = 0
         loss_cd = 0
         chd = chamfer_dist()
@@ -75,4 +78,9 @@ class SegGen(nn.Module):
                                                  part_points[i].transpose(2, 1).to('cuda')).sum()
             dist1, dist2, idx1, idx2 = chd(part_points[i].to('cuda'), recon[i].to('cuda'))
             loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
+        # global recon
+        loss_emd += emd.earth_mover_distance(recon_all.transpose(2, 1).to('cuda'),
+                                             points.transpose(2, 1).to('cuda')).sum()
+        dist1, dist2, idx1, idx2 = chd(points.to('cuda'), recon_all.to('cuda'))
+        loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
         return loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter

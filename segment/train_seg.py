@@ -63,14 +63,16 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
     for i, data in enumerate(train_loader):
         batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
-        recon, p_feat, sp_feat, sp_atten, labels = model(points)
+        part_recon, recon_all, p_feat, sp_feat, sp_atten, labels = model(points)
 
         part_points = []
         desired_points_per_class = 400
+
         for class_id in range(args.part_num):
             class_mask = (labels == class_id)
+            point_copy = points.clone()
             class_points = torch.zeros((batch_size, desired_points_per_class, 3))
-            points[~class_mask] = 0
+            point_copy[~class_mask] = 0
             points_count = torch.sum(class_mask, dim=1)
 
             undersampled_mask = points_count < desired_points_per_class
@@ -98,7 +100,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
 
         # loss and backward
         loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter \
-            = criterion(points, part_points, recon, p_feat, sp_feat, sp_atten)
+            = criterion(points, recon_all, part_points, part_recon, p_feat, sp_feat, sp_atten)
         loss = loss_emd + loss_inter + loss_sp_balance * 0.01 + loss_ss + loss_loc
         loss /= batch_size
         optimizer.zero_grad()
@@ -119,9 +121,9 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         writer.add_scalar('Batch/loss_inter', loss_inter.item(), n_itr)
         writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
 
-        if ((i + 1) % 1 == 0) & (epoch % 20 == 0):
+        if ((i + 1) % 1 == 0) & (epoch % 40 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
-            part_recon = torch.stack([points[0] for points in recon], dim=0)
+            part_recon = torch.stack([points[0] for points in part_recon], dim=0)
             write_ply_with_color(os.path.join(args.log_file, save_path + "_recon.ply"),
                                  part_recon.cpu().detach().numpy())
             vis_cate(points[0].cpu().detach().numpy(), labels[0].cpu().detach().numpy(), args,
