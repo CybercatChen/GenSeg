@@ -2,6 +2,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 import torch
 
+
 class PointNetEncoder(nn.Module):
     def __init__(self, args):
         super().__init__()
@@ -48,15 +49,34 @@ class PartDecoder(nn.Module):
         self.num_parts = args.part_num
         self.decoders = nn.ModuleList([PointNetDecoder(args) for _ in range(self.num_parts)])
 
+        self.mean_linears = nn.ModuleList([nn.Linear(args.latent_dim, args.latent_dim) for _ in range(self.num_parts)])
+        self.var_linears = nn.ModuleList([nn.Linear(args.latent_dim, args.latent_dim) for _ in range(self.num_parts)])
+
+    def reparameterize(self, mean, logvar):
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        z = mean + eps * std
+        return z
+
     def forward(self, part_features):
         B, M, E = part_features.shape
         assert M == self.num_parts
 
         recon_parts = []
+        means = []
+        logvars = []
         for i in range(self.num_parts):
             part_feature = part_features[:, i, :].unsqueeze(1)  # B 1 E
-            reconstructed_part = self.decoders[i](part_feature)  # B N 3
+
+            mean = self.mean_linears[i](part_feature)
+            logvar = self.var_linears[i](part_feature)
+
+            z = self.reparameterize(mean, logvar)
+
+            reconstructed_part = self.decoders[i](z)  # B N 3
             recon_parts.append(reconstructed_part)
+            means.append(mean)
+            logvars.append(logvar)
         recon_all = torch.cat(recon_parts, dim=1)  # B (M*N) 3
 
-        return recon_parts, recon_all
+        return recon_parts, recon_all, means, logvars

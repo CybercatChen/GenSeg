@@ -29,10 +29,12 @@ class SegGen(nn.Module):
         sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2),
                             p_feat)  # B 50(sp num) C, l1-norm on attention map last dim: dim-2
         label = torch.argmax(sp_atten.transpose(1, 2), axis=-1)
-        recon_parts, recon_all = self.decoder(sp_feat)
-        return recon_parts, recon_all, p_feat, sp_feat, sp_atten, label
 
-    def get_loss(self, points, recon_all, part_points, recon, p_feat, sp_feat, sp_atten):
+        recon_parts, recon_all, means, logvars = self.decoder(sp_feat)
+        return recon_parts, recon_all, p_feat, sp_feat, sp_atten, label, means, logvars
+
+    def get_loss(self, points, recon_all, part_points, recon,
+                 p_feat, sp_feat, sp_atten, means, logvars):
         B, N, C = p_feat.shape
         _, M, _ = sp_atten.shape
         # ss loss
@@ -83,4 +85,8 @@ class SegGen(nn.Module):
                                              points.transpose(2, 1).to('cuda')).sum()
         dist1, dist2, idx1, idx2 = chd(points.to('cuda'), recon_all.to('cuda'))
         loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
-        return loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter
+
+        kl_loss = 0
+        for mean, logvar in zip(means, logvars):
+            kl_loss += -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
+        return loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter, kl_loss
