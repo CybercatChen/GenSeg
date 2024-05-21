@@ -47,7 +47,6 @@ def train(args, writer):
         writer.add_scalar('Epoch/loss_loc', losses.avg(3), epoch)
         writer.add_scalar('Epoch/loss_sp_balance', losses.avg(4), epoch)
         writer.add_scalar('Epoch/loss_inter', losses.avg(5), epoch)
-        writer.add_scalar('Epoch/loss_kl', losses.avg(6), epoch)
 
         if (epoch + 1) % args.ckpt_save_freq == 0:
             filename = os.path.join(args.log_file, f'model_{epoch}.pth')
@@ -57,22 +56,21 @@ def train(args, writer):
 
 def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writer):
     losses = utils.AverageMeter(
-        ['loss_emd', 'loss_cd', 'loss_ss', 'loss_loc', 'loss_sp_balance', 'loss_inter', 'kl_loss'])
+        ['loss_emd', 'loss_cd', 'loss_ss', 'loss_loc', 'loss_sp_balance', 'loss_inter'])
     n_batches = len(train_loader)
     model.train()
 
     for i, data in enumerate(train_loader):
         args.batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
-        recon_parts, recon_all, p_feat, sp_feat, sp_atten, labels, means, logvars = model(args, points)
+        recon_parts, recon_all, p_feat, sp_feat, sp_atten, labels = model(args, points)
 
         part_points = utils.sample_aprt_point(args, labels, points)
 
         # loss and backward
-        # loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter, kl_loss \
-        loss_emd, loss_cd, loss_loc, loss_sp_balance, kl_loss \
-            = criterion(points, recon_all, part_points, recon_parts, p_feat, sp_feat, sp_atten, means, logvars)
-        loss = loss_emd + loss_inter + loss_sp_balance * 0.01 + loss_ss + loss_loc + kl_loss
+        loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter \
+            = criterion(points, part_points, recon_parts, p_feat, sp_feat, sp_atten)
+        loss = loss_emd + loss_cd + loss_loc
         loss /= args.batch_size
         optimizer.zero_grad()
         loss.backward()
@@ -82,7 +80,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         losses.update([loss_emd.item(), loss_cd.item(),
                        loss_ss.item(),
                        loss_loc.item(), loss_sp_balance.item(),
-                       loss_inter.item(), kl_loss.item()])
+                       loss_inter.item()])
         n_itr = epoch * n_batches + i
         writer.add_scalar('Batch/loss_emd', loss_emd.item(), n_itr)
         writer.add_scalar('Batch/loss_cd', loss_cd.item(), n_itr)
@@ -90,7 +88,6 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         writer.add_scalar('Batch/loss_loc', loss_loc.item(), n_itr)
         writer.add_scalar('Batch/loss_sp_balance', loss_sp_balance.item(), n_itr)
         writer.add_scalar('Batch/loss_inter', loss_inter.item(), n_itr)
-        writer.add_scalar('Batch/loss_kl', kl_loss.item(), n_itr)
         writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
 
         if ((i + 1) % 1 == 0) & (epoch % 40 == 0):

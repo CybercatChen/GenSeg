@@ -21,22 +21,21 @@ class SegGen(nn.Module):
             nn.Conv1d(256, self.part_num, 1)
         )
         self.decoder = PartDecoder(args)
-        # self.sp_atten = nn.Parameter(torch.rand(args.train_batch_size, self.part_num, args.data_point))
+        self.sp_atten = nn.Parameter(torch.rand(args.train_batch_size, self.part_num, args.data_point))
 
     def forward(self, args, points):
         p_feat = self.encoder(points)  # B N C
-        sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
-        # sp_atten = self.sp_atten[:args.batch_size, :, :]
+        # sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
+        sp_atten = self.sp_atten[:args.batch_size, :, :]
         sp_atten = F.softmax(sp_atten, dim=1)  # B 50 N, softmax on superpoint dim: dim-1
 
         sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2), p_feat)
         label = torch.argmax(sp_atten.transpose(1, 2), axis=-1)
 
-        recon_parts, recon_all, means, logvars = self.decoder(sp_feat)
-        return recon_parts, recon_all, p_feat, sp_feat, sp_atten, label, means, logvars
+        recon_parts, recon_all = self.decoder(sp_feat)
+        return recon_parts, recon_all, p_feat, sp_feat, sp_atten, label
 
-    def get_loss(self, points, recon_all, part_points, recon,
-                 p_feat, sp_feat, sp_atten, means, logvars):
+    def get_loss(self, points, part_points, recon, p_feat, sp_feat, sp_atten):
         B, N, C = p_feat.shape
         _, M, _ = sp_atten.shape
         # ss loss
@@ -82,7 +81,4 @@ class SegGen(nn.Module):
             dist1, dist2, idx1, idx2 = chd(part_points[i].to('cuda'), recon[i].to('cuda'))
             loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
 
-        kl_loss = 0
-        for mean, logvar in zip(means, logvars):
-            kl_loss += -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
-        return loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter, kl_loss
+        return loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter
