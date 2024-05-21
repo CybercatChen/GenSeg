@@ -2,6 +2,42 @@ import torch
 from easydict import EasyDict
 
 
+def sample_aprt_point(args, labels, points, desired_points_per_class=400):
+    part_points = []
+
+    for class_id in range(args.part_num):
+        class_mask = (labels == class_id)
+        point_copy = points.clone()
+        class_points = torch.zeros((args.batch_size, desired_points_per_class, 3))
+        point_copy[~class_mask] = 0
+        points_count = torch.sum(class_mask, dim=1)
+
+        undersampled_mask = points_count < desired_points_per_class
+        oversampled_mask = points_count > desired_points_per_class
+
+        for j in range(args.batch_size):
+            if points_count[j] == 0:
+                class_points[j] = torch.zeros((desired_points_per_class, 3))
+            else:
+                if undersampled_mask[j]:
+                    non_zero_indices = torch.nonzero(class_mask[j]).squeeze(1)
+                    random_indices = torch.randint(0, non_zero_indices.size(0), (desired_points_per_class,),
+                                                   device=non_zero_indices.device)
+                    selected_indices = non_zero_indices[random_indices]
+                    class_points[j] = points[j, selected_indices]
+
+                elif oversampled_mask[j]:
+                    non_zero_indices = torch.nonzero(class_mask[j]).squeeze(1)
+                    random_indices = torch.randint(0, non_zero_indices.size(0), (desired_points_per_class,),
+                                                   device=non_zero_indices.device)
+                    selected_indices = non_zero_indices[random_indices]
+                    class_points[j] = points[j, non_zero_indices[random_indices]]
+
+        part_points.append(class_points)
+
+    return part_points
+
+
 class AverageMeter(object):
     def __init__(self, items=None):
         self.items = items
@@ -71,22 +107,3 @@ def inf_nan_to_num(tensor, num=0.0):
     tensor[~is_inf] = num
     tensor[~is_nan] = num
     return tensor
-
-
-if __name__ == "__main__":
-    # sp_param = torch.rand(2, 2, 14).cuda()
-    # sp_param.requires_grad = True
-    # sample_points = batch_sample(sp_param, 100)
-    # print(torch.autograd.grad(torch.sum(sample_points), sp_param))
-
-    points = torch.rand(1, 2, 3).cuda()
-    # print(points)
-    sq_points = torch.rand(1, 4, 5, 3).cuda()
-    sp_param = torch.rand(1, 4, 14).cuda()
-    # sp_param = torch.FloatTensor([[[0,0,0,0,0,0,0,1,0,0,1,0,0,1],[0,0,0,0,0,0,0,0,1,0,-1,0,0,1]]]).cuda()
-    sp_param.requires_grad = True
-    points = distance_p2d(points, sq_points, sp_param)
-    # print(points)
-    # print(points.shape)
-    # print(torch.autograd.grad(torch.sum(points), sp_param))
-    pass

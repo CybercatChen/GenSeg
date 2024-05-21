@@ -4,6 +4,7 @@ from segment.utils.dataset import *
 from segment.utils.utils import *
 from segment.utils import parser
 from segment.model.model import *
+from segment.utils.visualize import *
 
 
 def test(args):
@@ -17,22 +18,14 @@ def test(args):
     model = model.cuda()
     checkpoint = torch.load(args.ckpt_path)
     model.load_state_dict(checkpoint['state_dict'], strict=True)
-    epoch = checkpoint['epoch']
-    best_loss = checkpoint['best_loss']
-    is_best = checkpoint['is_best']
-
-    print(f'Load checkpoint from {args.ckpt_path}, epoch: {epoch}, best_loss: {best_loss}, is_best: {is_best}')
-
-    # Criterion
     criterion = model.get_loss
 
-    # test
     if args.vis:
         vis_dir = os.path.join(args.log_dir, 'visualize')
         os.makedirs(vis_dir, exist_ok=True)
         np.random.seed(123)
         sp_colors = np.random.rand(args.part_num, 3)
-    losses = AverageMeter(['loss_fit', 'loss_ss', 'loss_loc', 'loss_sp_balance', 'all_loss'])
+    losses = AverageMeter(['loss_emd', 'loss_cd', 'loss_ss', 'loss_loc', 'loss_sp_balance', 'loss_inter', 'kl_loss'])
     model.eval()
     for i, data in enumerate(test_loader):
         batch_size = data['pointcloud'].shape[0]
@@ -42,7 +35,7 @@ def test(args):
 
         # loss
         loss_ss, loss_loc, loss_sp_balance = criterion(points, p_feat, sp_atten, sp_feat)
-        loss =1.0 * loss_ss + 1.0 * loss_loc + 0.001 * loss_sp_balance
+        loss = 1.0 * loss_ss + 1.0 * loss_loc + 0.001 * loss_sp_balance
         loss /= batch_size
 
         # summary
@@ -67,6 +60,31 @@ def test(args):
     print('[Test] Losses = %s' % (['%.8f' % l for l in losses.avg()]))
 
 
+def sample_gen(args):
+    model = SegGen(args)
+    model = model.cuda()
+    checkpoint = torch.load('../segment/logs/vessel_left/2024-05-17-16-07-38/model_3999.pth')
+    model.load_state_dict(checkpoint, strict=True)
+
+    vis_dir = os.path.join(args.log_dir, 'visualize')
+    os.makedirs(vis_dir, exist_ok=True)
+
+    part_feature_1 = torch.randn(1, 1, 256).cuda()
+    part_feature_2 = torch.randn(1, 1, 256).cuda()
+    part_feature_3 = torch.randn(1, 1, 256).cuda()
+    part_feature_4 = torch.randn(1, 1, 256).cuda()
+    part_feature = torch.cat((part_feature_1, part_feature_2, part_feature_3, part_feature_4), dim=1)
+    # part_feature = torch.randn(1, 4, 256).cuda()
+
+    model.eval()
+
+    recon_parts, recon_all, _, _ = model.decoder(part_feature)
+
+    part_recon = torch.stack([points[0] for points in recon_parts], dim=0)
+    write_ply_with_color(os.path.join(vis_dir, args.dataset + "_sample.ply"),
+                         part_recon.cpu().detach().numpy())
+
+
 if __name__ == '__main__':
     args = parser.get_args()
-    test(args)
+    sample_gen(args)

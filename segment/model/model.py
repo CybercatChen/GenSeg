@@ -1,4 +1,6 @@
 import sys
+
+import torch
 from chamfer_distance import ChamferDistance as chamfer_dist
 
 sys.path.append('..')
@@ -19,15 +21,15 @@ class SegGen(nn.Module):
             nn.Conv1d(256, self.part_num, 1)
         )
         self.decoder = PartDecoder(args)
+        # self.sp_atten = nn.Parameter(torch.rand(args.train_batch_size, self.part_num, args.data_point))
 
-    def forward(self, points):
+    def forward(self, args, points):
         p_feat = self.encoder(points)  # B N C
         sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
-        sp_atten = F.softmax(sp_atten, dim=1)  # B 50(sp num) N, softmax on superpoint dim: dim-1
+        # sp_atten = self.sp_atten[:args.batch_size, :, :]
+        sp_atten = F.softmax(sp_atten, dim=1)  # B 50 N, softmax on superpoint dim: dim-1
 
-        # get superpoint features S
-        sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2),
-                            p_feat)  # B 50(sp num) C, l1-norm on attention map last dim: dim-2
+        sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2), p_feat)
         label = torch.argmax(sp_atten.transpose(1, 2), axis=-1)
 
         recon_parts, recon_all, means, logvars = self.decoder(sp_feat)
@@ -70,7 +72,6 @@ class SegGen(nn.Module):
         loss_inter = torch.mean(max_similarity)
 
         # loss recon
-        # part recon
         loss_emd = 0
         loss_cd = 0
         chd = chamfer_dist()
@@ -80,11 +81,6 @@ class SegGen(nn.Module):
                                                  part_points[i].transpose(2, 1).to('cuda')).sum()
             dist1, dist2, idx1, idx2 = chd(part_points[i].to('cuda'), recon[i].to('cuda'))
             loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
-        # global recon
-        loss_emd += emd.earth_mover_distance(recon_all.transpose(2, 1).to('cuda'),
-                                             points.transpose(2, 1).to('cuda')).sum()
-        dist1, dist2, idx1, idx2 = chd(points.to('cuda'), recon_all.to('cuda'))
-        loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
 
         kl_loss = 0
         for mean, logvar in zip(means, logvars):
