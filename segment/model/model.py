@@ -1,6 +1,5 @@
 import sys
-
-import torch
+import torch.nn.init as init
 from chamfer_distance import ChamferDistance as chamfer_dist
 
 sys.path.append('..')
@@ -21,21 +20,22 @@ class SegGen(nn.Module):
             nn.Conv1d(256, self.part_num, 1)
         )
         self.decoder = PartDecoder(args)
-        self.sp_atten = nn.Parameter(torch.rand(args.train_batch_size, self.part_num, args.data_point))
+        # self.sp_atten = nn.Parameter(torch.rand(args.data_point, args.part_num))
+        # init.xavier_uniform_(self.sp_atten)
 
     def forward(self, args, points):
         p_feat = self.encoder(points)  # B N C
-        # sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
-        sp_atten = self.sp_atten[:args.batch_size, :, :]
-        sp_atten = F.softmax(sp_atten, dim=1)  # B 50 N, softmax on superpoint dim: dim-1
+        sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
+        sp_atten = F.softmax(sp_atten, dim=1)
 
         sp_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2), p_feat)
-        label = torch.argmax(sp_atten.transpose(1, 2), axis=-1)
+        pre_label = torch.argmax(sp_atten.transpose(1, 2), axis=-1)
 
-        recon_parts, recon_all = self.decoder(sp_feat)
-        return recon_parts, recon_all, p_feat, sp_feat, sp_atten, label
+        part_recon, recon_all, means, logvars = self.decoder(sp_feat)
+        return part_recon, recon_all, p_feat, sp_feat, sp_atten, pre_label, means, logvars
 
-    def get_loss(self, points, part_points, recon, p_feat, sp_feat, sp_atten):
+    def get_loss(self, points, part_points, part_recon, gt_label, pre_label,
+                 p_feat, sp_feat, sp_atten, means, logvars):
         B, N, C = p_feat.shape
         _, M, _ = sp_atten.shape
         # ss loss
@@ -75,10 +75,17 @@ class SegGen(nn.Module):
         loss_cd = 0
         chd = chamfer_dist()
 
-        for i in range(len(recon)):
-            loss_emd += emd.earth_mover_distance(recon[i].transpose(2, 1).to('cuda'),
+        for i in range(len(part_recon)):
+            loss_emd += emd.earth_mover_distance(part_recon[i].transpose(2, 1).to('cuda'),
                                                  part_points[i].transpose(2, 1).to('cuda')).sum()
-            dist1, dist2, idx1, idx2 = chd(part_points[i].to('cuda'), recon[i].to('cuda'))
+            dist1, dist2, idx1, idx2 = chd(part_points[i].to('cuda'), part_recon[i].to('cuda'))
             loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
 
-        return loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter
+        kl_loss = 0
+        for mean, logvar in zip(means, logvars):
+            kl_loss += -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
+
+        ce = nn.CrossEntropyLoss()
+        gt_label = (gt_label - 1).clone().long()
+        loss_ce = ce(sp_atten, gt_label)
+        return loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter, kl_loss, loss_ce

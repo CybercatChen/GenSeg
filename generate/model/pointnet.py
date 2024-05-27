@@ -25,13 +25,14 @@ class PointNetDecoder(nn.Module):
     def __init__(self, args):
         super().__init__()
         self.latent_dim = 256
+        self.data_point = args.data_point
         self.fc1 = nn.Linear(self.latent_dim, 128)
         self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, 3)
+        self.fc3 = nn.Linear(64, self.data_point * 3 // args.part_num)
 
     def forward(self, feature):
         x = F.relu(self.fc1(feature))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
-        recon_points = x.view(-1, 2048, 3)
+        recon_points = x.view(-1, self.data_point, 3)
         return recon_points

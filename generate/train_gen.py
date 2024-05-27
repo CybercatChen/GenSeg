@@ -15,9 +15,9 @@ torch.autograd.set_detect_anomaly(True)
 
 
 def train(args, writer):
-    train_dataset = PCDataset(data_path=args.input_data_path, output_path=args.data_save_path,
-                              cates=args.dataset, raw_data=None,
-                              split='train', scale_mode=args.scale_mode, transform=None)
+    train_dataset = PartDataset(output_path=args.data_save_path,
+                                cates=args.dataset, raw_data=None,
+                                split='train', scale_mode=args.scale_mode, transform=None)
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size, num_workers=1)
 
     # build GMVAE
@@ -50,33 +50,36 @@ def train(args, writer):
 
 
 def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writer):
-    losses = utils.AverageMeter(['loss_emd', 'loss_cd', 'loss_mse'])
+    losses = utils.AverageMeter(['loss_emd', 'loss_cd', 'loss_ce'])
     n_batches = len(train_loader)
     model.train()
     for i, data in enumerate(train_loader):
-        batch_size = data['pointcloud'].shape[0]
+        args.batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
-        recon, p_feat = model(points)
-        p_feat_np = p_feat.cpu().detach().numpy()
+        gt_label = data['labels'].cuda()
+
+        recon, p_feat, sp_atten = model(args, points)
         # loss and backward
-        loss_emd, loss_mse, loss_cd = criterion(points, recon)
-        loss = loss_emd + loss_cd
-        loss /= batch_size
+        loss_emd, loss_ce, loss_cd = criterion(points, recon, sp_atten, gt_label)
+        loss = loss_emd + loss_cd + 100 * loss_ce
+        loss /= args.batch_size
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         # summary
-        losses.update([loss_emd.item(), loss_cd.item(), loss_mse.item()])
+        losses.update([loss_emd.item(), loss_cd.item(), loss_ce.item()])
         n_itr = epoch * n_batches + i
         writer.add_scalar('Batch/loss_emd', loss_emd.item(), n_itr)
         writer.add_scalar('Batch/loss_cd', loss_cd.item(), n_itr)
-        writer.add_scalar('Batch/loss_mse', loss_mse.item(), n_itr)
+        writer.add_scalar('Batch/loss_ce', loss_ce.item(), n_itr)
         writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
         if ((i + 10) % 2 == 0) & (epoch % 20 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())
-            write_ply(os.path.join(args.log_file, save_path + "_data.ply"), points[0].cpu().detach().numpy())
+            label = torch.argmax(sp_atten, dim=-1)
+            vis_cate(points[0].cpu().detach().numpy(), label.cpu().detach().numpy(), args,
+                     save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
         torch.cuda.empty_cache()
 
     print('[Training] EPOCH: %d Losses = %s' % (

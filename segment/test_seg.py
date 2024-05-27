@@ -8,7 +8,7 @@ from segment.utils.visualize import *
 
 
 def test(args):
-    test_dataset = PCDataset(data_path=args.input_data_path, raw_data=None, output_path=args.data_save_path,
+    test_dataset = PCDataset(data_path=args.data_path, raw_data=None,
                              cates=args.dataset,
                              split='val', scale_mode=args.scale_mode, transform=None)
     test_loader = DataLoader(test_dataset, batch_size=args.val_batch_size, num_workers=1)
@@ -63,18 +63,15 @@ def test(args):
 def sample_gen(args):
     model = SegGen(args)
     model = model.cuda()
-    checkpoint = torch.load('../segment/logs/vessel_left/2024-05-17-16-07-38/model_3999.pth')
+    checkpoint = torch.load('../segment/logs/chair/2024-05-21-22-34-35/model_3999.pth')
     model.load_state_dict(checkpoint, strict=True)
 
     vis_dir = os.path.join(args.log_dir, 'visualize')
     os.makedirs(vis_dir, exist_ok=True)
 
-    part_feature_1 = torch.randn(1, 1, 256).cuda()
-    part_feature_2 = torch.randn(1, 1, 256).cuda()
-    part_feature_3 = torch.randn(1, 1, 256).cuda()
-    part_feature_4 = torch.randn(1, 1, 256).cuda()
-    part_feature = torch.cat((part_feature_1, part_feature_2, part_feature_3, part_feature_4), dim=1)
-    # part_feature = torch.randn(1, 4, 256).cuda()
+    part_feature = torch.randn(1, 1, 256).cuda()
+    part_feature = part_feature.repeat(1, args.part_num, 1)
+    # repeated_part_feature = part_feature.repeat(1, 4, 1)
 
     model.eval()
 
