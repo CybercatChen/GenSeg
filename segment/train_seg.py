@@ -89,8 +89,6 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
                                  vis_part.cpu().detach().numpy())
             vis_cate(points[0].cpu().detach().numpy(), pre_label[0].cpu().detach().numpy(), args,
                      save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
-            # vis_cate(points[0].cpu().detach().numpy(), gt_label[0].cpu().detach().numpy(), args,
-            #          save_path=os.path.join(args.log_file, save_path + "_gt.ply"))
 
         torch.cuda.empty_cache()
 

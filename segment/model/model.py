@@ -3,7 +3,7 @@ import torch.nn.init as init
 from chamfer_distance import ChamferDistance as chamfer_dist
 
 sys.path.append('..')
-from script.PyTorchEMD import emd
+from extention.PyTorchEMD import emd
 from segment.model.pointnet import *
 from segment.model.partae import *
 
