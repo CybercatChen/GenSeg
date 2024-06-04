@@ -18,7 +18,7 @@ def get_args():
 
     parser.add_argument('--ckpt_save_freq', default=500, type=int)
     parser.add_argument('--start_ckpts_encoder',
-                        default='../generate/logs/2024-05-06-17-42-35/encoder_999.pth', type=str)
+                        default='../generate/logs/vessel_left/2024-05-12-13-20-31/encoder_499.pth', type=str)
     parser.add_argument('--log_dir', type=str, default='./logs')
 
     # Model

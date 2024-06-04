@@ -38,16 +38,14 @@ def train(args, writer):
 
     for epoch in range(args.max_epoch):
         # train
-        losses = train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writer)
+        losses = train_one_epoch(args, model, train_loader, optimizer, criterion, epoch)
         scheduler.step()
 
         writer.add_scalar('Epoch/loss_emd', losses.avg(0), epoch)
         writer.add_scalar('Epoch/loss_cd', losses.avg(1), epoch)
-        writer.add_scalar('Epoch/loss_ss', losses.avg(2), epoch)
-        writer.add_scalar('Epoch/loss_loc', losses.avg(3), epoch)
-        writer.add_scalar('Epoch/loss_sp_balance', losses.avg(4), epoch)
-        writer.add_scalar('Epoch/loss_kl', losses.avg(5), epoch)
-        writer.add_scalar('Epoch/loss_ce', losses.avg(6), epoch)
+        writer.add_scalar('Epoch/loss_loc', losses.avg(2), epoch)
+        writer.add_scalar('Epoch/loss_bal', losses.avg(3), epoch)
+        writer.add_scalar('Epoch/loss_rank', losses.avg(4), epoch)
 
         if (epoch + 1) % args.ckpt_save_freq == 0:
             filename = os.path.join(args.log_file, f'model_{epoch}.pth')
@@ -55,26 +53,24 @@ def train(args, writer):
             torch.save(model.state_dict(), filename)
 
 
-def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writer):
+def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
     losses = utils.AverageMeter(
-        ['loss_emd', 'loss_cd', 'loss_ss', 'loss_loc', 'loss_sp_balance', 'loss_kl', 'loss_ce'])
+        ['loss_emd', 'loss_cd', 'loss_loc', 'loss_bal', 'loss_rank'])
     n_batches = len(train_loader)
     model.train()
 
     for i, data in enumerate(train_loader):
         args.batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
-        gt_label = data['labels'].cuda()
-        part_recon, recon_all, p_feat, sp_feat, sp_atten, pre_label, means, logvars = model(args, points)
+        # gt_label = data['labels'].cuda()
+        part_recon, recon_all, p_feat, part_feat, sp_atten, pre_label, means, logvars = model(args, points)
 
         part_points = utils.sample_aprt_point(args, pre_label, points)
 
-        # loss and backward
-        loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter, loss_kl, loss_ce \
-            = criterion(points, part_points, part_recon,
-                        gt_label, pre_label,
-                        p_feat, sp_feat, sp_atten, means, logvars)
-        loss = loss_emd + loss_cd + 100 * loss_ce
+        loss_emd, loss_cd, loss_loc, loss_bal, loss_rank \
+            = criterion(points, part_points, part_recon, part_feat,
+                        p_feat, sp_atten, means, logvars)
+        loss = loss_cd + loss_rank + loss_loc + 0.01 * loss_bal
         loss /= args.batch_size
         optimizer.zero_grad()
         loss.backward()
@@ -82,18 +78,8 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
 
         # summary
         losses.update([loss_emd.item(), loss_cd.item(),
-                       loss_ss.item(),
-                       loss_loc.item(), loss_sp_balance.item(),
-                       loss_kl.item(), loss_ce.item()])
-        n_itr = epoch * n_batches + i
-        writer.add_scalar('Batch/loss_emd', loss_emd.item(), n_itr)
-        writer.add_scalar('Batch/loss_cd', loss_cd.item(), n_itr)
-        writer.add_scalar('Batch/loss_ss', loss_ss.item(), n_itr)
-        writer.add_scalar('Batch/loss_loc', loss_loc.item(), n_itr)
-        writer.add_scalar('Batch/loss_sp_balance', loss_sp_balance.item(), n_itr)
-        writer.add_scalar('Batch/loss_kl', loss_kl.item(), n_itr)
-        writer.add_scalar('Batch/loss_ce', loss_ce.item(), n_itr)
-        writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
+                       loss_loc.item(), loss_bal.item(),
+                       loss_rank.item()])
 
         if ((i + 1) % (n_batches // 4) == 0) & (epoch % 40 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
@@ -103,8 +89,8 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
                                  vis_part.cpu().detach().numpy())
             vis_cate(points[0].cpu().detach().numpy(), pre_label[0].cpu().detach().numpy(), args,
                      save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
-            vis_cate(vis_recon.cpu().detach().numpy(), gt_label[0].cpu().detach().numpy(), args,
-                     save_path=os.path.join(args.log_file, save_path + "_gt.ply"))
+            # vis_cate(points[0].cpu().detach().numpy(), gt_label[0].cpu().detach().numpy(), args,
+            #          save_path=os.path.join(args.log_file, save_path + "_gt.ply"))
 
         torch.cuda.empty_cache()
 
