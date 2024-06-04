@@ -72,7 +72,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         # loss_emd, loss_cd, loss_ss, loss_loc, loss_sp_balance, loss_inter, kl_loss \
         loss_emd, loss_cd, loss_loc, loss_sp_balance, kl_loss \
             = criterion(points, recon_all, part_points, recon_parts, p_feat, sp_feat, sp_atten, means, logvars)
-        loss = loss_emd + loss_inter + loss_sp_balance * 0.01 + loss_ss + loss_loc + kl_loss
+        loss = loss_emd + loss_sp_balance * 0.01 + loss_loc + kl_loss
         loss /= args.batch_size
         optimizer.zero_grad()
         loss.backward()
@@ -80,16 +80,13 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
 
         # summary
         losses.update([loss_emd.item(), loss_cd.item(),
-                       loss_ss.item(),
                        loss_loc.item(), loss_sp_balance.item(),
-                       loss_inter.item(), kl_loss.item()])
+                       kl_loss.item()])
         n_itr = epoch * n_batches + i
         writer.add_scalar('Batch/loss_emd', loss_emd.item(), n_itr)
         writer.add_scalar('Batch/loss_cd', loss_cd.item(), n_itr)
-        writer.add_scalar('Batch/loss_ss', loss_ss.item(), n_itr)
         writer.add_scalar('Batch/loss_loc', loss_loc.item(), n_itr)
         writer.add_scalar('Batch/loss_sp_balance', loss_sp_balance.item(), n_itr)
-        writer.add_scalar('Batch/loss_inter', loss_inter.item(), n_itr)
         writer.add_scalar('Batch/loss_kl', kl_loss.item(), n_itr)
         writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
 
