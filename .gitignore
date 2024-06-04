@@ -1,6 +1,4 @@
 /data/
 /generate/logs
 /segment/logs
-/script/metrics
-/script/pyTorchChamferDistance
-/.idea
+/extention
