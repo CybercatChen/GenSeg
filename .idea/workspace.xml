@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="dde419c8-5c68-47ba-803e-f6c7886d5cc6" name="Changes" comment="upload">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -268,6 +269,7 @@
       <workItem from="1717321548788" duration="9611000" />
       <workItem from="1717490200232" duration="628000" />
       <workItem from="1717503070752" duration="883000" />
+      <workItem from="1717503969998" duration="159000" />
     </task>
     <task id="LOCAL-00001" summary="part decoder and recon but 2048">
       <option name="closed" value="true" />
@@ -365,7 +367,23 @@
       <option name="project" value="LOCAL" />
       <updated>1717503513219</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="upload">
+      <option name="closed" value="true" />
+      <created>1717503991022</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1717503991022</updated>
+    </task>
+    <task id="LOCAL-00014" summary="upload">
+      <option name="closed" value="true" />
+      <created>1717504044288</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1717504044288</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
