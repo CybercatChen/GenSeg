@@ -2,7 +2,7 @@ import torch
 from easydict import EasyDict
 
 
-def sample_aprt_point(args, labels, points, desired_points_per_class=400):
+def sample_aprt_point(args, labels, points, desired_points_per_class):
     part_points = []
 
     for class_id in range(args.part_num):

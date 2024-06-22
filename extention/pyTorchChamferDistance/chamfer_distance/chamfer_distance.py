@@ -3,8 +3,8 @@ from torch.utils.cpp_extension import load
 import sys
 
 cd = load(name="cd",
-          sources=["D:/PythonCode/PartBasedModel/SGAS-main/extention/pyTorchChamferDistance/chamfer_distance/chamfer_distance.cpp",
-                   "D:/PythonCode/PartBasedModel/SGAS-main/extention/pyTorchChamferDistance/chamfer_distance/chamfer_distance.cu"])
+          sources=["./extention/pyTorchChamferDistance/chamfer_distance/chamfer_distance.cpp",
+                   "./extention/pyTorchChamferDistance/chamfer_distance/chamfer_distance.cu"])
 
 
 class ChamferDistanceFunction(torch.autograd.Function):

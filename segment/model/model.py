@@ -1,11 +1,12 @@
 import sys
-import torch.nn.init as init
-from chamfer_distance import ChamferDistance as chamfer_dist
+
+from kaolin.metrics.pointcloud import chamfer_distance
 
 sys.path.append('..')
 from extention.PyTorchEMD import emd
 from segment.model.pointnet import *
 from segment.model.partae import *
+from segment.utils.topoloss import *
 
 
 class SegGen(nn.Module):
@@ -34,8 +35,10 @@ class SegGen(nn.Module):
         part_recon, recon_all, means, logvars = self.decoder(part_feat)
         return part_recon, recon_all, p_feat, part_feat, sp_atten, pre_label, means, logvars
 
-    def get_loss(self, points, part_points, part_recon, part_feat,
-                 p_feat, sp_atten, means, logvars):
+    def get_loss(self, points,
+                 part_points, part_recon, part_feat,
+                 p_feat, sp_atten,
+                 means, logvars):
         B, N, C = p_feat.shape
         _, M, _ = sp_atten.shape
 
@@ -56,17 +59,19 @@ class SegGen(nn.Module):
         # loss recon
         loss_emd = 0
         loss_cd = 0
-        chd = chamfer_dist()
+        # chd = chamfer_dist()
 
         for i in range(len(part_recon)):
             loss_emd += emd.earth_mover_distance(part_recon[i].transpose(2, 1).to('cuda'),
                                                  part_points[i].transpose(2, 1).to('cuda')).sum()
-            dist1, dist2, idx1, idx2 = chd(part_points[i].to('cuda'), part_recon[i].to('cuda'))
-            loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
+            dist = chamfer_distance(part_points[i].to('cuda'), part_recon[i].to('cuda'))
+            loss_cd += (torch.mean(dist[0])) + (torch.mean(dist[1]))
 
-        # loss_kl = 0
-        # for mean, logvar in zip(means, logvars):
-        #     loss_kl += -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
+            # dist1, dist2, idx1, idx2 = chd(part_points[i].to('cuda'), part_recon[i].to('cuda'))
+            # loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
+        loss_kl = 0
+        for mean, logvar in zip(means, logvars):
+            loss_kl += -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
 
         # ce = nn.CrossEntropyLoss()
         # gt_label = (gt_label - 1).clone().long()
@@ -89,4 +94,11 @@ class SegGen(nn.Module):
                 idx = idx + 1
         loss_rank = 1 + torch.max(lowRankLoss) - torch.min(highRankLoss)
 
-        return loss_emd, loss_cd, loss_loc, loss_bal, loss_rank
+        return loss_emd, loss_cd, loss_loc, loss_bal, loss_rank, loss_kl
+
+    def topo_loss(self, recon_all, points):
+        B, N, C = recon_all.shape
+        loss_topo = 0
+        for i in range(B):
+            loss_topo += topoloss_wasserstein_based(pt_gen=recon_all[i], pt_gt=points[i])
+        return loss_topo

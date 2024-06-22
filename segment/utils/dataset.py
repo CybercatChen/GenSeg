@@ -12,6 +12,8 @@ synsetid_to_cate = {
     '594666': 'vessel_left',
     '02691156': 'airplane',
     '03001627': 'chair',
+    '03648465': 'skeleton_left',
+    '03648146': 'skeleton_left_1000'
 }
 cate_to_synsetid = {v: k for k, v in synsetid_to_cate.items()}
 
@@ -25,7 +27,7 @@ class PCDataset(Dataset):
         self.split = split
         self.scale_mode = scale_mode
         self.transform = transform
-        self.sample_num = 2048
+        self.sample_num = 1000
         self.pointclouds = []
         self.stats = None
 
@@ -54,16 +56,19 @@ class PCDataset(Dataset):
         print("initial dataset...")
         for inputfile in inputfiles:
             pcd = read_ply(inputfile)
-            if pcd.shape[0] < self.sample_num:
-                continue
-            if self.sample_num > 0:
-                choice = np.random.choice(pcd.shape[0], self.sample_num, replace=False)
-                pcd = pcd[choice]
-            if pid < train_num:
-                train_pcds.append(pcd)
-            else:
-                val_pcds.append(pcd)
-            pid += 1
+            point_num = pcd.shape[0]
+            if point_num != 0:
+                if point_num < self.sample_num:
+                    choice = np.random.choice(point_num, self.sample_num, replace=True)
+                    pcd = pcd[choice]
+                elif point_num > self.sample_num:
+                    choice = np.random.choice(point_num, self.sample_num, replace=False)
+                    pcd = pcd[choice]
+                if pid < train_num:
+                    train_pcds.append(pcd)
+                else:
+                    val_pcds.append(pcd)
+                pid += 1
 
         print('train:', np.array(train_pcds).shape)
         print('val:', np.array(val_pcds).shape)

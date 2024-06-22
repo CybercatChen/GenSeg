@@ -15,9 +15,9 @@ torch.autograd.set_detect_anomaly(True)
 
 
 def train(args, writer):
-    train_dataset = PartDataset(data_path=args.data_path, cates=args.dataset,
-                                raw_data=None,
-                                split='train', scale_mode=args.scale_mode, transform=None)
+    train_dataset = PCDataset(data_path=args.data_path, cates=args.dataset,
+                              raw_data=None,
+                              split='train', scale_mode=args.scale_mode, transform=None)
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size, num_workers=1)
     model = SegGen(args)
     pre_encoder = torch.load(args.start_ckpts_encoder)
@@ -45,6 +45,8 @@ def train(args, writer):
         writer.add_scalar('Epoch/loss_loc', losses.avg(2), epoch)
         writer.add_scalar('Epoch/loss_bal', losses.avg(3), epoch)
         writer.add_scalar('Epoch/loss_rank', losses.avg(4), epoch)
+        writer.add_scalar('Epoch/loss_topo', losses.avg(5), epoch)
+        writer.add_scalar('Epoch/loss_kl', losses.avg(6), epoch)
 
         if (epoch + 1) % args.ckpt_save_freq == 0:
             filename = os.path.join(args.log_file, f'model_{epoch}.pth')
@@ -54,22 +56,26 @@ def train(args, writer):
 
 def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
     losses = utils.AverageMeter(
-        ['loss_emd', 'loss_cd', 'loss_loc', 'loss_bal', 'loss_rank'])
+        ['loss_emd', 'loss_cd', 'loss_loc', 'loss_bal', 'loss_rank', 'loss_topo', 'loss_kl'])
     n_batches = len(train_loader)
     model.train()
 
     for i, data in enumerate(train_loader):
         args.batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
-        # gt_label = data['labels'].cuda()
         part_recon, recon_all, p_feat, part_feat, sp_atten, pre_label, means, logvars = model(args, points)
 
-        part_points = utils.sample_aprt_point(args, pre_label, points)
+        part_points = utils.sample_aprt_point(args, pre_label, points, args.part_point)
 
-        loss_emd, loss_cd, loss_loc, loss_bal, loss_rank \
+        loss_emd, loss_cd, loss_loc, loss_bal, loss_rank, loss_kl \
             = criterion(points, part_points, part_recon, part_feat,
-                        p_feat, sp_atten, means, logvars)
-        loss = loss_cd + loss_rank + loss_loc + 0.01 * loss_bal
+                        p_feat, sp_atten,
+                        means, logvars)
+        loss = loss_cd + loss_rank + loss_loc + 0.01 * loss_bal + 0.001 * loss_kl
+        loss_topo = torch.zeros(1)
+        # if epoch >= 6000:
+        #     loss_topo = model.topo_loss(recon_all, points)
+        #     loss += 0.001 * loss_topo
         loss /= args.batch_size
         optimizer.zero_grad()
         loss.backward()
@@ -78,9 +84,10 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
         # summary
         losses.update([loss_emd.item(), loss_cd.item(),
                        loss_loc.item(), loss_bal.item(),
-                       loss_rank.item()])
+                       loss_rank.item(), loss_topo.item(),
+                       loss_kl.item()])
 
-        if ((i + 1) % (n_batches // 4) == 0) & (epoch % 40 == 0):
+        if ((i + 1) % (n_batches // 4) == 0) & (epoch % 400 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             vis_part = torch.stack([points[0] for points in part_recon], dim=0)
             vis_recon = torch.concat([points[0] for points in part_recon], dim=0)
