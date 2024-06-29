@@ -1,6 +1,6 @@
 import sys
 
-from kaolin.metrics.pointcloud import chamfer_distance
+# from kaolin.metrics.pointcloud import chamfer_distance
 
 sys.path.append('..')
 from extention.PyTorchEMD import emd
