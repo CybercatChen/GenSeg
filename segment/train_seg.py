@@ -80,7 +80,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
         # summary
         losses.update([loss_emd.item(), loss_cd.item(),
                        loss_loc.item(), loss_bal.item(),
-                       loss_rank.item()])
+                       loss_rank.item(), loss_kl.item()])
 
         if ((i + 1) % (n_batches // 4) == 0) & (epoch % 400 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))

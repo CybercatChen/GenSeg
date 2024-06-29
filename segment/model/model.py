@@ -1,15 +1,16 @@
 import sys
 
-# from kaolin.metrics.pointcloud import chamfer_distance
-
 sys.path.append('..')
 from extention.PyTorchEMD import emd
 from segment.model.pointnet import *
 from segment.model.partae import *
 from segment.utils.topoloss import *
+from extention.chamfer3D.dist_chamfer_3D import chamfer_3DDist
+from extention.earth_movers_distance.emd import EarthMoverDistance
 
 
 class SegGen(nn.Module):
+
     def __init__(self, args):
         super().__init__()
         self.part_num = args.part_num
@@ -23,6 +24,8 @@ class SegGen(nn.Module):
         self.decoder = PartDecoder(args)
         # self.sp_atten = nn.Parameter(torch.rand(args.data_point, args.part_num))
         # init.xavier_uniform_(self.sp_atten)
+        self.chd = chamfer_3DDist()
+        self.emd = EarthMoverDistance()
 
     def forward(self, args, points):
         p_feat = self.encoder(points)  # B N C
@@ -59,23 +62,16 @@ class SegGen(nn.Module):
         # loss recon
         loss_emd = 0
         loss_cd = 0
-        # chd = chamfer_dist()
 
         for i in range(len(part_recon)):
-            loss_emd += emd.earth_mover_distance(part_recon[i].transpose(2, 1).to('cuda'),
-                                                 part_points[i].transpose(2, 1).to('cuda')).sum()
-            dist = chamfer_distance(part_points[i].to('cuda'), part_recon[i].to('cuda'))
-            loss_cd += (torch.mean(dist[0])) + (torch.mean(dist[1]))
+            loss_emd += torch.mean(self.emd(part_recon[i].to('cuda'),
+                                 part_points[i].to('cuda')))
+            dist1, dist2, idx1, idx2 = self.chd(part_points[i].to('cuda'), part_recon[i].to('cuda'))
+            loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
 
-            # dist1, dist2, idx1, idx2 = chd(part_points[i].to('cuda'), part_recon[i].to('cuda'))
-            # loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
         loss_kl = 0
         for mean, logvar in zip(means, logvars):
             loss_kl += -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
-
-        # ce = nn.CrossEntropyLoss()
-        # gt_label = (gt_label - 1).clone().long()
-        # loss_ce = ce(sp_atten, gt_label)
 
         part_feat = part_feat.transpose(0, 1)
         lowRankLoss = torch.zeros([self.part_num], dtype=torch.float).cuda()
