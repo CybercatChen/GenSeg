@@ -16,7 +16,7 @@ def get_args():
     parser.add_argument('--max_epoch', default=2000, type=int)
     parser.add_argument('--lr', default=0.0001, type=int)
 
-    parser.add_argument('--ckpt_save_freq', default=500, type=int)
+    parser.add_argument('--ckpt_save_freq', default=200, type=int)
     parser.add_argument('--log_dir', type=str, default='./logs')
     parser.add_argument('--part_num', default=4, type=int)
     parser.add_argument('--ckpt_encoder', type=str, default='./logs')

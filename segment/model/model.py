@@ -1,10 +1,11 @@
 import sys
 
+import torch
+
 sys.path.append('..')
-from extention.PyTorchEMD import emd
 from segment.model.pointnet import *
-from segment.model.partae import *
-from segment.utils.topoloss import *
+from segment.model.pointnet2 import *
+from segment.utils.utils import *
 from extention.chamfer3D.dist_chamfer_3D import chamfer_3DDist
 from extention.earth_movers_distance.emd import EarthMoverDistance
 
@@ -15,11 +16,11 @@ class SegGen(nn.Module):
         super().__init__()
         self.part_num = args.part_num
         self.temp = 10
-        self.encoder = PointNetEncoder(args)
-        self.atten_encoder = PointNetEncoder(args)
+        self.encoder = PointNet2PointFeatureStable()
+        self.atten_encoder = PointNetEncoder()
 
         self.attention_layer = nn.Sequential(
-            nn.Conv1d(256, self.part_num, 1)
+            nn.Conv1d(128, self.part_num, 1)
         )
         self.decoder = PartDecoder(args)
         # self.sp_atten = nn.Parameter(torch.rand(args.data_point, args.part_num))
@@ -28,12 +29,16 @@ class SegGen(nn.Module):
         self.emd = EarthMoverDistance()
 
     def forward(self, args, points):
-        p_feat = self.encoder(points)  # B N C
-        sp_atten = self.attention_layer(p_feat.transpose(2, 1))  # B 50(sp num) N
+        p_feat = self.encoder(points.transpose(1, 2))  # B C N
+        sp_atten = self.attention_layer(p_feat)  # B 50(sp num) N
         sp_atten = F.softmax(sp_atten, dim=1)
 
-        part_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2), p_feat)
+        # part_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2), p_feat)
+        # part_feat = F.normalize(torch.bmm(sp_atten, p_feat.transpose(1, 2)), p=1, dim=2)
         pre_label = torch.argmax(sp_atten.transpose(1, 2), axis=-1)
+        part_feat = sample_point(args, labels=pre_label, points=p_feat)
+        # one_hot_labels = F.one_hot(pre_label, num_classes=args.part_num).transpose(1, 2)
+        # part_point_feat = torch.einsum('bcd,bde->bcde', one_hot_labels, p_feat)
 
         part_recon, recon_all, means, logvars = self.decoder(part_feat)
         return part_recon, recon_all, p_feat, part_feat, sp_atten, pre_label, means, logvars
@@ -53,7 +58,6 @@ class SegGen(nn.Module):
         coord_dist = torch.norm(coord_dist, dim=-1)  # B M N
         coord_dist = coord_dist * sp_atten  # B M N
         loss_loc = torch.sum(coord_dist)  # paper
-
         # sp balance loss
         sp_atten_per_sp = torch.sum(sp_atten, dim=-1)  # B M
         sp_atten_sum = torch.sum(sp_atten_per_sp, dim=-1, keepdim=True) / M  # B 1
@@ -65,7 +69,7 @@ class SegGen(nn.Module):
 
         for i in range(len(part_recon)):
             loss_emd += torch.mean(self.emd(part_recon[i].to('cuda'),
-                                 part_points[i].to('cuda')))
+                                            part_points[i].to('cuda')))
             dist1, dist2, idx1, idx2 = self.chd(part_points[i].to('cuda'), part_recon[i].to('cuda'))
             loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
 
@@ -73,28 +77,22 @@ class SegGen(nn.Module):
         for mean, logvar in zip(means, logvars):
             loss_kl += -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
 
-        part_feat = part_feat.transpose(0, 1)
-        lowRankLoss = torch.zeros([self.part_num], dtype=torch.float).cuda()
-        for i in range(self.part_num):
-            _, s, _ = torch.svd(part_feat[i, :, :], some=False)
-            lowRankLoss[i] = s[1] / s[0]
-
-        highRankLoss = torch.zeros([int((self.part_num - 1) * self.part_num / 2)], dtype=torch.float).cuda()
-        idx = 0
-        for i in range(self.part_num):
-            for j in range(self.part_num):
-                if j <= i:
-                    continue
-                _, s, _ = torch.svd(torch.cat([part_feat[i, :, :], part_feat[j, :, :]], 1), some=False)
-                highRankLoss[idx] = s[1] / s[0]
-                idx = idx + 1
-        loss_rank = 1 + torch.max(lowRankLoss) - torch.min(highRankLoss)
-
+        # part_feat = part_feat.transpose(0, 1)
+        # lowRankLoss = torch.zeros([self.part_num], dtype=torch.float).cuda()
+        # for i in range(self.part_num):
+        #     _, s, _ = torch.svd(part_feat[i, :, :], some=False)
+        #     lowRankLoss[i] = s[1] / s[0]
+        #
+        # highRankLoss = torch.zeros([int((self.part_num - 1) * self.part_num / 2)], dtype=torch.float).cuda()
+        # idx = 0
+        # for i in range(self.part_num):
+        #     for j in range(self.part_num):
+        #         if j <= i:
+        #             continue
+        #         _, s, _ = torch.svd(torch.cat([part_feat[i, :, :], part_feat[j, :, :]], 1), some=False)
+        #         highRankLoss[idx] = s[1] / s[0]
+        #         idx = idx + 1
+        # loss_rank = 1 + torch.max(lowRankLoss) - torch.min(highRankLoss)
+        loss_rank = torch.zeros(1)
+        # return loss_emd, loss_cd, loss_loc, loss_bal, loss_rank, loss_kl
         return loss_emd, loss_cd, loss_loc, loss_bal, loss_rank, loss_kl
-
-    def topo_loss(self, recon_all, points):
-        B, N, C = recon_all.shape
-        loss_topo = 0
-        for i in range(B):
-            loss_topo += topoloss_wasserstein_based(pt_gen=recon_all[i], pt_gt=points[i])
-        return loss_topo

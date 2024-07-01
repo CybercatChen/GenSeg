@@ -1,5 +1,6 @@
 import torch
 from easydict import EasyDict
+import torch.nn.functional as F
 
 
 def sample_aprt_point(args, labels, points, desired_points_per_class):
@@ -36,6 +37,32 @@ def sample_aprt_point(args, labels, points, desired_points_per_class):
         part_points.append(class_points)
 
     return part_points
+
+
+def sample_point(args, labels, points, desired_points_per_class=400):
+    B, E, N = points.shape
+    one_hot_labels = F.one_hot(labels, num_classes=args.part_num).float()  # [B, N, part_num]
+    one_hot_labels = one_hot_labels.transpose(1, 2)  # [B, part_num, N]
+    part_point_feat = torch.einsum('bcd,bed->bcde', one_hot_labels, points)  # [B, part_num, N, 3]
+
+    points_count = torch.sum(one_hot_labels, dim=2)  # [B, part_num]
+    sampled_points = torch.zeros((B, args.part_num, desired_points_per_class, E), device=points.device)
+
+    sampling_needed = points_count != 0
+
+    for b in range(B):
+        for p in range(args.part_num):
+            if sampling_needed[b, p]:
+                non_zero_indices = torch.nonzero(one_hot_labels[b, p]).squeeze(1)
+                num_points = non_zero_indices.size(0)
+                if num_points <= desired_points_per_class:
+                    indices = torch.randint(0, num_points, (desired_points_per_class,), device=points.device)
+                else:
+                    indices = torch.randperm(num_points, device=points.device)[:desired_points_per_class]
+
+                sampled_points[b, p] = part_point_feat[b, p, non_zero_indices[indices]]
+
+    return sampled_points
 
 
 class AverageMeter(object):
@@ -87,11 +114,6 @@ def print_log(args, string):
     print(string)
 
 
-def log_args_to_file(args, pre='args'):
-    for key, val in args.__dict__.items():
-        print_log(args, f'{pre}.{key} : {val}')
-
-
 def log_config_to_file(args, config, pre='config'):
     for key, val in config.items():
         if isinstance(config[key], EasyDict):
@@ -99,11 +121,3 @@ def log_config_to_file(args, config, pre='config'):
             log_config_to_file(args, config[key], pre=pre + '.' + key)
             continue
         print_log(args, f'{pre}.{key} : {val}')
-
-
-def inf_nan_to_num(tensor, num=0.0):
-    is_inf = torch.isfinite(tensor)
-    is_nan = torch.isfinite(tensor)
-    tensor[~is_inf] = num
-    tensor[~is_nan] = num
-    return tensor

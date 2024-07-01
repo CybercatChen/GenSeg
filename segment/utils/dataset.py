@@ -27,7 +27,7 @@ class PCDataset(Dataset):
         self.split = split
         self.scale_mode = scale_mode
         self.transform = transform
-        self.sample_num = 1000
+        self.sample_num = 2000
         self.pointclouds = []
         self.stats = None
 

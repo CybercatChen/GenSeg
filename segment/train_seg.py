@@ -2,7 +2,6 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 from tensorboardX import SummaryWriter
-import time
 import sys
 
 sys.path.append('..')
@@ -58,6 +57,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
         ['loss_emd', 'loss_cd', 'loss_loc', 'loss_bal', 'loss_rank', 'loss_kl'])
     n_batches = len(train_loader)
     model.train()
+    start_time = datetime.now()
 
     for i, data in enumerate(train_loader):
         args.batch_size = data['pointcloud'].shape[0]
@@ -70,7 +70,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
             = criterion(points, part_points, part_recon, part_feat,
                         p_feat, sp_atten,
                         means, logvars)
-        loss = loss_cd + loss_rank + loss_loc + 0.01 * loss_bal
+        loss = loss_cd + loss_loc + 0.01 * loss_bal
 
         loss /= args.batch_size
         optimizer.zero_grad()
@@ -92,16 +92,19 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
                      save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
 
         torch.cuda.empty_cache()
-
-    print('[Training] EPOCH: %d Losses = %s' % (
-        epoch, [(name, '%.4f' % value) for name, value in zip(losses.items, losses.avg())]))
+    end_time = datetime.now()
+    epoch_time = (end_time - start_time).total_seconds()
+    print(f'[Training] EPOCH:{epoch}, Time:{epoch_time:.2f}, '
+          f'Losses={[(name, f"{value:.4f}") for name, value in zip(losses.items, losses.avg())]}')
 
     return losses
 
 
 if __name__ == '__main__':
     args = parser.get_args()
-    timestamp = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+    from datetime import datetime
+
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     args.log_file = os.path.join(args.log_dir, args.dataset, f'{timestamp}')
     writer = SummaryWriter(args.log_file)
     train(args, writer)
