@@ -5,9 +5,10 @@ def get_args():
     parser = argparse.ArgumentParser()
     # Dataset
     parser.add_argument('--dataset', type=str, default='vessel_left')
-    parser.add_argument('--data_path', type=str, default='../data/')
+    parser.add_argument('--data_path', type=str, default='./data/')
     parser.add_argument('--scale_mode', type=str, default='global_unit')
-    parser.add_argument('--data_point', default=2000, type=int)
+    parser.add_argument('--data_point', default=2048, type=int)
+    parser.add_argument('--pretrain_data_point', default=2048, type=int)
     parser.add_argument('--part_point', default=400, type=int)
 
     # training set
@@ -17,15 +18,14 @@ def get_args():
     parser.add_argument('--max_epoch', default=10000, type=int)
     parser.add_argument('--lr', default=0.0001, type=int)
 
+    parser.add_argument('--pretrain_ckpt_save_freq', default=200, type=int)
     parser.add_argument('--ckpt_save_freq', default=4000, type=int)
     parser.add_argument('--start_ckpts_encoder',
-                        default='../generate/logs/vessel_left/2024-07-01-19-01-09/encoder_499.pth', type=str)
-    parser.add_argument('--log_dir', type=str, default='./logs')
-
+                        default='./logs/GEN/vessel_left/2024-07-01-22-17-10/encoder_5999.pth', type=str)
     # Model
     parser.add_argument('--part_num', default=5, type=int)
     parser.add_argument('--latent_dim', default=128, type=int)
-    parser.add_argument('--part_decoder', type=bool, default=True)
+    parser.add_argument('--log_dir', type=str, default='./logs')
 
     args = parser.parse_args()
     return args

@@ -1,10 +1,8 @@
 from torch.utils.data import DataLoader
 import open3d as o3d
-from segment.utils.dataset import *
-from segment.utils.utils import *
-from segment.utils import parser
-from segment.model.model import *
-from segment.utils.visualize import *
+from utils.dataset import *
+from model.model import *
+from utils.visualize import *
 
 
 def test(args):

@@ -3,6 +3,24 @@ import torch.nn as nn
 import torch
 
 
+class PointNetDecoder(nn.Module):
+    def __init__(self, args):
+        super().__init__()
+        self.latent_dim = 128
+        self.data_point = args.pretrain_data_point
+
+        self.fc1 = nn.Linear(self.latent_dim, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 3)
+
+    def forward(self, feature):
+        x = F.relu(self.fc1(feature))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        recon_points = x.view(-1, self.data_point, 3)
+        return recon_points
+
+
 class PointNetEncoder(nn.Module):
     def __init__(self):
         super().__init__()
@@ -22,21 +40,24 @@ class PointNetEncoder(nn.Module):
         return p_feature
 
 
-class PointNetDecoder(nn.Module):
+class PartPointNet(nn.Module):
     def __init__(self, args):
         super().__init__()
         self.latent_dim = 128
         self.part_point = args.part_point
+        self.all_point = args.data_point
 
         self.fc1 = nn.Linear(self.latent_dim, 128)
         self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, 3)
+        self.fc3 = nn.Linear(64, self.all_point * 3)
+        # self.fc3 = nn.Linear(64,  3)
 
     def forward(self, feature):
         x = F.relu(self.fc1(feature))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
-        recon_points = x.view(-1, self.part_point, 3)
+        # recon_points = x.view(-1, self.part_point, 3)
+        recon_points = x.view(-1, self.all_point, 3)
         return recon_points
 
 
@@ -45,7 +66,7 @@ class PartDecoder(nn.Module):
         super().__init__()
 
         self.num_parts = args.part_num
-        self.decoders = nn.ModuleList([PointNetDecoder(args) for _ in range(self.num_parts)])
+        self.decoders = nn.ModuleList([PartPointNet(args) for _ in range(self.num_parts)])
 
         self.mean_linears = nn.ModuleList([nn.Linear(args.latent_dim, args.latent_dim) for _ in range(self.num_parts)])
         self.var_linears = nn.ModuleList([nn.Linear(args.latent_dim, args.latent_dim) for _ in range(self.num_parts)])
@@ -57,15 +78,15 @@ class PartDecoder(nn.Module):
         return z
 
     def forward(self, part_features):
-        # B, M, E = part_features.shape
-        B, M, N, E = part_features.shape
+        B, M, E = part_features.shape
+        # B, M, N, E = part_features.shape
 
         recon_parts = []
         means = []
         logvars = []
         for i in range(self.num_parts):
-            # part_feature = part_features[:, i, :].unsqueeze(1)  # B 1 E
-            part_feature = part_features[:, i, :, :]  # B n E
+            part_feature = part_features[:, i, :].unsqueeze(1)  # B 1 E
+            # part_feature = part_features[:, i, :, :]  # B n E
 
             mean = self.mean_linears[i](part_feature)
             logvar = self.var_linears[i](part_feature)

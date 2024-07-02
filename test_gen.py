@@ -1,9 +1,8 @@
 from torch.utils.data import DataLoader
 import open3d as o3d
-from generate.utils.dataset import *
-from generate.model.model import *
-from generate.utils.utils import *
-from generate.utils import parser
+from utils.dataset import *
+from model.model import *
+from utils.utils import *
 
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE

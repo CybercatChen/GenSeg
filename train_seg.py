@@ -2,13 +2,11 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 from tensorboardX import SummaryWriter
-import sys
-
-sys.path.append('..')
-from segment.utils.dataset import *
-from segment.model.model import *
-from segment.utils import utils, parser
-from segment.utils.visualize import *
+from utils.dataset import *
+from model.model import *
+from utils import utils
+import config
+from utils.visualize import *
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -70,7 +68,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
             = criterion(points, part_points, part_recon, part_feat,
                         p_feat, sp_atten,
                         means, logvars)
-        loss = loss_cd + loss_loc + 0.01 * loss_bal
+        loss = loss_emd + loss_loc + 0.01 * loss_bal
 
         loss /= args.batch_size
         optimizer.zero_grad()
@@ -101,10 +99,10 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
 
 
 if __name__ == '__main__':
-    args = parser.get_args()
+    args = config.get_args()
     from datetime import datetime
 
     timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-    args.log_file = os.path.join(args.log_dir, args.dataset, f'{timestamp}')
+    args.log_file = os.path.join(args.log_dir, 'AE', args.dataset, f'{timestamp}')
     writer = SummaryWriter(args.log_file)
     train(args, writer)

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="On explicit save action" serverName="siqichen@10.103.69.251:22 password" confirmBeforeUploading="false" confirmBeforeDeletion="false" autoUploadExternalChanges="true">
-    <option name="confirmBeforeDeletion" value="false" />
+  <component name="PublishConfigData" autoUpload="On explicit save action" serverName="siqichen@10.103.69.251:22 password" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false" autoUploadExternalChanges="true">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
       <paths name="siqichen@10.103.69.251:22 password">
