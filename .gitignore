@@ -1,4 +1,2 @@
-/data/
-/generate/logs
-/segment/logs
-./idea
+/data
+/logs
