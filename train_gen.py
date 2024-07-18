@@ -43,7 +43,6 @@ def train(args, writer):
 
 def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writer):
     losses = utils.AverageMeter(['loss_emd', 'loss_cd'])
-    n_batches = len(train_loader)
     model.train()
     start_time = datetime.now()
     for i, data in enumerate(train_loader):
@@ -59,10 +58,7 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch, writ
         optimizer.step()
 
         losses.update([loss_emd.item(), loss_cd.item()])
-        n_itr = epoch * n_batches + i
-        writer.add_scalar('Batch/loss_emd', loss_emd.item(), n_itr)
-        writer.add_scalar('Batch/loss_cd', loss_cd.item(), n_itr)
-        writer.add_scalar('Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
+
         if ((i + 10) % 2 == 0) & (epoch % 20 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
             write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon[0].cpu().detach().numpy())

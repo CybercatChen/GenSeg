@@ -25,12 +25,14 @@ class PointNetDecoder_Gen(nn.Module):
     def __init__(self, args):
         super().__init__()
         self.latent_dim = args.latent_dim
-        self.data_point = args.data_point
+        # self.data_point = args.data_point
+        self.data_point = 2048
         self.part_num = args.part_num
 
         self.fc1 = nn.Linear(self.latent_dim, 128)
         self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, self.data_point * 3 // self.part_num)
+        self.fc3 = nn.Linear(64, self.data_point * 3)
+        # self.fc3 = nn.Linear(64, self.data_point * 3 // self.part_num)
 
     def forward(self, feature):
         x = F.relu(self.fc1(feature))
@@ -69,7 +71,7 @@ class PartPointNet(nn.Module):
         self.fc1 = nn.Linear(self.latent_dim, 128)
         self.fc2 = nn.Linear(128, 64)
         # self.fc3 = nn.Linear(64, self.part_point * 3)
-        self.fc3 = nn.Linear(64,  3)
+        self.fc3 = nn.Linear(64, self.part_point * 3)
 
     def forward(self, feature):
         x = F.relu(self.fc1(feature))
@@ -96,15 +98,15 @@ class PartDecoder(nn.Module):
         return z
 
     def forward(self, part_features):
-        # B, M, E = part_features.shape
-        B, M, N, E = part_features.shape
+        B, M, E = part_features.shape
+        # B, M, N, E = part_features.shape
 
         recon_parts = []
         means = []
         logvars = []
         for i in range(self.num_parts):
-            # part_feature = part_features[:, i, :].unsqueeze(1)  # B 1 E
-            part_feature = part_features[:, i, :, :]  # B n E
+            part_feature = part_features[:, i, :].unsqueeze(1)  # B 1 E
+            # part_feature = part_features[:, i, :, :]  # B n E
 
             mean = self.mean_linears[i](part_feature)
             logvar = self.var_linears[i](part_feature)

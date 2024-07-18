@@ -12,9 +12,9 @@ torch.autograd.set_detect_anomaly(True)
 
 
 def train(args, writer):
-    train_dataset = PartDataset(data_path=args.data_path, cates=args.dataset,
-                              raw_data=None,
-                              split='train', scale_mode=args.scale_mode, transform=None)
+    train_dataset = PCDataset(data_path=args.data_path, cates=args.dataset,
+                                raw_data=None,
+                                split='train', scale_mode=args.scale_mode, transform=None)
     train_loader = DataLoader(train_dataset, batch_size=args.train_batch_size, num_workers=1)
     model = SegGen(args)
     pre_encoder = torch.load(args.start_ckpts_encoder)
@@ -66,10 +66,9 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
         part_points = utils.sample_aprt_point(args, pre_label, points, args.part_point)
 
         loss_emd, loss_cd, loss_loc, loss_bal, loss_rank, loss_kl, loss_ss \
-            = criterion(points, part_points, part_recon, part_feat,
-                        p_feat, sp_atten,
-                        means, logvars)
-        loss = loss_cd + loss_loc + 0.01 * loss_bal
+            = criterion(points, part_points, part_recon,
+                        p_feat, sp_atten, means, logvars)
+        loss = loss_cd + loss_emd + loss_loc + loss_bal
 
         loss /= args.batch_size
         optimizer.zero_grad()
@@ -101,10 +100,10 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
 
 
 if __name__ == '__main__':
-    args = config.get_args()
+    args = config.get_args_seg()
     from datetime import datetime
 
     timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-    args.log_file = os.path.join(args.log_dir, 'DEBUG', args.dataset, f'{timestamp}')
+    args.log_file = os.path.join(args.log_dir, 'AE', args.dataset + f'_{timestamp}')
     writer = SummaryWriter(args.log_file)
     train(args, writer)

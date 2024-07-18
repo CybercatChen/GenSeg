@@ -1,3 +1,5 @@
+import torch
+
 from model.pointnet import *
 from model.pointnet2 import *
 from utils.utils import *
@@ -10,11 +12,9 @@ class SegGen(nn.Module):
     def __init__(self, args):
         super().__init__()
         self.part_num = args.part_num
-        self.temp = 10
-        # self.encoder = PointNet2PointFeatureStable()
         self.encoder = PointNetEncoder()
         self.attention_layer = nn.Sequential(
-            nn.Conv1d(256, self.part_num, 1)
+            nn.Conv1d(args.latent_dim, self.part_num, 1)
         )
         self.decoder = PartDecoder(args)
         self.chd = chamfer_3DDist()
@@ -25,27 +25,18 @@ class SegGen(nn.Module):
         sp_atten = self.attention_layer(p_feat)  # B M N
         sp_atten = F.softmax(sp_atten, dim=1)
 
-        pre_label = torch.argmax(sp_atten.transpose(1, 2), axis=-1)
-        part_feat = sample_point(args, labels=pre_label, points=p_feat)
+        pre_label = torch.argmax(sp_atten, dim=1)
+        hot_label = F.one_hot(pre_label).unsqueeze(1).float()
+        part_feat = torch.max(p_feat.unsqueeze(-1) * hot_label, dim=-2, keepdim=True)[0].squeeze()
 
-        part_recon, recon_all, means, logvars = self.decoder(part_feat)
+        part_recon, recon_all, means, logvars = self.decoder(part_feat.transpose(1, 2))
         return part_recon, recon_all, p_feat, part_feat, sp_atten, pre_label, means, logvars
 
-    def get_loss(self, points,
-                 part_points, part_recon, part_feat,
-                 p_feat, sp_atten,
-                 means, logvars):
+    def get_loss(self, points, part_points, part_recon,
+                 p_feat, sp_atten, means, logvars):
         p_feat = p_feat.transpose(1, 2)
         B, N, C = p_feat.shape
         _, M, _ = sp_atten.shape
-        # # ss loss
-        # sp_feat_un = part_feat.unsqueeze(2)  # B M 1 C
-        # p_feat_un = p_feat.unsqueeze(1)  # B 1 N C
-        # feat_dist = sp_feat_un - p_feat_un  # B M N C
-        # feat_dist = torch.norm(feat_dist, dim=-1)  # B M N
-        # feat_dist = feat_dist * sp_atten  # B M N
-        # # loss_ss = torch.sum(feat_dist) / (M * N)
-        # loss_ss = torch.sum(feat_dist)  # paper
         # loc loss
         centriods = torch.bmm(F.normalize(sp_atten, p=1, dim=2), points)  # B M 3
         cent_un = centriods.unsqueeze(2)  # B M 1 3
@@ -89,6 +80,16 @@ class SegGen(nn.Module):
         #         highRankLoss[idx] = s[1] / s[0]
         #         idx = idx + 1
         # loss_rank = 1 + torch.max(lowRankLoss) - torch.min(highRankLoss)
+
+        # ss loss
+        # sp_feat_un = part_feat.unsqueeze(2)  # B M 1 C
+        # p_feat_un = p_feat.unsqueeze(1)  # B 1 N C
+        # feat_dist = sp_feat_un - p_feat_un  # B M N C
+        # feat_dist = torch.norm(feat_dist, dim=-1)  # B M N
+        # feat_dist = feat_dist * sp_atten  # B M N
+        # # loss_ss = torch.sum(feat_dist) / (M * N)
+        # loss_ss = torch.sum(feat_dist)  # paper
+
         loss_rank = torch.zeros(1).cuda()
         loss_ss = torch.zeros(1).cuda()
         return loss_emd, loss_cd, loss_loc, loss_bal, loss_rank, loss_kl, loss_ss
@@ -102,7 +103,7 @@ class Gen(nn.Module):
         self.decoder = PointNetDecoder(args)
 
         self.attention_layer = nn.Sequential(
-            nn.Conv1d(128, self.part_num, 1)
+            nn.Conv1d(args.latent_dim, self.part_num, 1)
         )
         self.chd = chamfer_3DDist()
         self.emd = EarthMoverDistance()
@@ -123,34 +124,47 @@ class Cls(nn.Module):
     def __init__(self, args):
         super().__init__()
         self.part_num = args.part_num
-        self.temp = 10
-        # self.encoder = PointNet2PointFeatureStable()
         self.encoder = PointNetEncoder()
 
         self.attention_layer = nn.Sequential(
             nn.Conv1d(args.latent_dim, self.part_num, 1)
         )
-        self.decoder = PointNetDecoder_Gen(args)
+        # self.decoder = PointNetDecoder_Gen(args)
+        self.decoder = PartDecoder(args)
+        self.bn = nn.BatchNorm1d(args.latent_dim)
 
         self.chd = chamfer_3DDist()
         self.emd = EarthMoverDistance()
         self.ce_loss = nn.CrossEntropyLoss()
 
     def forward(self, points):
-        p_feat = self.encoder(points.transpose(1, 2))
+        p_feat = self.encoder(points.transpose(1, 2))  # p_feat: (B, E, N)
         sp_atten = self.attention_layer(p_feat)
         sp_atten = F.softmax(sp_atten, dim=1)
 
-        part_feat = torch.bmm(F.normalize(sp_atten, p=1, dim=2), p_feat.transpose(1, 2))
-        recon_all = self.decoder(part_feat)
-        return recon_all, p_feat, part_feat, sp_atten
+        pre_label = torch.argmax(sp_atten, dim=1)
+        hot_label = F.one_hot(pre_label).unsqueeze(1).float()
+        part_feat = torch.max(p_feat.unsqueeze(-1) * hot_label, dim=-2, keepdim=True)[0].squeeze()
 
-    def get_loss(self, points, recon_all, label, sp_atten):
-        loss_emd = torch.mean(self.emd(recon_all, points))
-        dist1, dist2, idx1, idx2 = self.chd(points, recon_all)
-        loss_cd = (torch.mean(dist1)) + (torch.mean(dist2))
+        recon_parts, recon_all, means, logvars = self.decoder(part_feat.transpose(1, 2))
+
+        return recon_all, recon_parts, pre_label, sp_atten, means, logvars
+
+    def get_loss(self, label, sp_atten,
+                 part_points, part_recon, means, logvars):
+        loss_emd, loss_cd = 0, 0
+        for i in range(len(part_recon)):
+            loss_emd += torch.mean(self.emd(part_recon[i].to('cuda'),
+                                            part_points[i].to('cuda')))
+            dist1, dist2, idx1, idx2 = self.chd(part_points[i].to('cuda'), part_recon[i].to('cuda'))
+            loss_cd += (torch.mean(dist1)) + (torch.mean(dist2))
 
         sp_atten = sp_atten.transpose(1, 2).contiguous().view(-1, self.part_num)
         label = label.view(-1).long()
         loss_ce = self.ce_loss(sp_atten, label)
-        return loss_emd, loss_cd, loss_ce
+
+        loss_kl = 0
+        for mean, logvar in zip(means, logvars):
+            loss_kl += -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
+
+        return loss_emd, loss_cd, loss_ce, loss_kl

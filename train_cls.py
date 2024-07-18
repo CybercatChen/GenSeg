@@ -26,13 +26,13 @@ def train(args, writer):
     criterion = model.get_loss
 
     for epoch in range(args.max_epoch):
-        # train
         losses = train_one_epoch(args, model, train_loader, optimizer, criterion, epoch)
         scheduler.step()
 
         writer.add_scalar('Epoch/loss_emd', losses.avg(0), epoch)
         writer.add_scalar('Epoch/loss_cd', losses.avg(1), epoch)
         writer.add_scalar('Epoch/loss_ce', losses.avg(2), epoch)
+        writer.add_scalar('Epoch/loss_kl', losses.avg(3), epoch)
 
         if (epoch + 1) % args.pretrain_ckpt_save_freq == 0:
             filename = os.path.join(args.log_file, f'model_{epoch}.pth')
@@ -42,7 +42,7 @@ def train(args, writer):
 
 def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
     losses = utils.AverageMeter(
-        ['loss_emd', 'loss_cd', 'loss_ce'])
+        ['loss_emd', 'loss_cd', 'loss_ce', 'loss_kl'])
     n_batches = len(train_loader)
     model.train()
     start_time = datetime.now()
@@ -51,26 +51,26 @@ def train_one_epoch(args, model, train_loader, optimizer, criterion, epoch):
         args.batch_size = data['pointcloud'].shape[0]
         points = data['pointcloud'].cuda()
         label = data['labels'].cuda()
-        recon_all, p_feat, part_feat, sp_atten = model(points)
+        recon_all, recon_parts, pre_label, sp_atten, means, logvars = model(points)
 
-        loss_emd, loss_cd, loss_ce = criterion(points, recon_all, label, sp_atten)
-        loss = loss_ce + 0.001 * loss_cd
+        part_points = utils.sample_aprt_point(args, pre_label, points, args.part_point)
 
-        loss_emd /= args.batch_size
-        loss_cd /= args.batch_size
-        loss_ce /= args.batch_size
+        loss_emd, loss_cd, loss_ce, loss_kl = criterion(label, sp_atten,
+                                                        part_points, recon_parts, means, logvars)
+        loss = loss_ce + 0.1 * loss_cd + 0.1 * loss_emd + 0.0001 * loss_kl
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        losses.update([loss_emd.item(), loss_cd.item(), loss_ce.item()])
+        losses.update([loss_emd.item(), loss_cd.item(), loss_ce.item(), loss_kl.item()])
 
-        if ((i + 1) % (n_batches // 4) == 0) & (epoch % 40 == 0):
+        if ((i + 1) % (n_batches // 4) == 0) & (epoch % 50 == 0):
             save_path = data['cate'][0] + '_' + str(np.array(data['id'][0]))
-            write_ply(os.path.join(args.log_file, save_path + "_recon.ply"), recon_all[0].cpu().detach().numpy())
-            label = torch.argmax(sp_atten, dim=-2)
-            vis_cate(points[0].cpu().detach().numpy(), label.cpu().detach().numpy(), args,
+            vis_part = torch.stack([points[0] for points in recon_parts], dim=0)
+            write_ply_with_color(os.path.join(args.log_file, save_path + "_recon.ply"),
+                                 vis_part.cpu().detach().numpy())
+            vis_cate(points[0].cpu().detach().numpy(), pre_label[0].cpu().detach().numpy(), args,
                      save_path=os.path.join(args.log_file, save_path + "_cate.ply"))
         torch.cuda.empty_cache()
 
@@ -87,6 +87,6 @@ if __name__ == '__main__':
     from datetime import datetime
 
     timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-    args.log_file = os.path.join(args.log_dir, 'DEBUG', args.dataset, f'{timestamp}')
+    args.log_file = os.path.join(args.log_dir, 'CLS', args.dataset + f'_{timestamp}')
     writer = SummaryWriter(args.log_file)
     train(args, writer)
