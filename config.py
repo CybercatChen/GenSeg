@@ -14,8 +14,8 @@ def get_args():
     parser.add_argument('--part_num', default=5, type=int)
 
     # training set
-    parser.add_argument('--batch_size', default=256, type=int)
-    parser.add_argument('--train_batch_size', default=256, type=int)
+    parser.add_argument('--batch_size', default=128, type=int)
+    parser.add_argument('--train_batch_size', default=128, type=int)
     parser.add_argument('--val_batch_size', default=128, type=int)
     parser.add_argument('--max_epoch', default=10000, type=int)
     parser.add_argument('--lr', default=0.0001, type=int)

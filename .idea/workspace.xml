@@ -4,17 +4,112 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b88378a3-3e67-46f5-b59c-6f56c3dff6ef" name="Changes" comment="update and rebuild">
+    <list default="true" id="b88378a3-3e67-46f5-b59c-6f56c3dff6ef" name="Changes" comment="update">
+      <change afterPath="$PROJECT_DIR$/grids/gaussian.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/grids/sphere.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/grids/sphere_1024.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/grids/sphere_2048.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/grids/sphere_3072.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/grids/sphere_4096.npy" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/grids/sphere_5120.npy" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/deployment.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/submit.sh" beforeDir="false" afterPath="$PROJECT_DIR$/logs/submit.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/submit_cls.sh" beforeDir="false" afterPath="$PROJECT_DIR$/logs/submit_cls.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/submit_gen.sh" beforeDir="false" afterPath="$PROJECT_DIR$/logs/submit_gen.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/pointnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/pointnet.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_cls.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_cls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/ChamferDistance/LICENSE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/ChamferDistance/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/ChamferDistance/chamfer_distance/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/ChamferDistance/chamfer_distance/chamfer_distance.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/ChamferDistance/chamfer_distance/chamfer_distance.cu" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/ChamferDistance/chamfer_distance/chamfer_distance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/CDEMD.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/foldingnet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/build/lib.win-amd64-cpython-39/emd.cp39-win_amd64.pyd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/build/temp.win-amd64-cpython-39/Release/.ninja_deps" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/build/temp.win-amd64-cpython-39/Release/.ninja_log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/build/temp.win-amd64-cpython-39/Release/build.ninja" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/build/temp.win-amd64-cpython-39/Release/emd.cp39-win_amd64.exp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/build/temp.win-amd64-cpython-39/Release/emd.cp39-win_amd64.lib" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/build/temp.win-amd64-cpython-39/Release/emd.obj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/build/temp.win-amd64-cpython-39/Release/emd_cuda.obj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/dist/emd-0.0.0-py3.9-win-amd64.egg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/emd.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/emd.egg-info/PKG-INFO" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/emd.egg-info/SOURCES.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/emd.egg-info/dependency_links.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/emd.egg-info/top_level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/emd_cuda.cu" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/emd_module.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/EMDLoss/setup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/build/lib.win-amd64-cpython-39/emd_cuda.cp39-win_amd64.pyd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/build/temp.win-amd64-cpython-39/Release/.ninja_deps" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/build/temp.win-amd64-cpython-39/Release/.ninja_log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/build/temp.win-amd64-cpython-39/Release/build.ninja" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/build/temp.win-amd64-cpython-39/Release/cuda/emd.obj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/build/temp.win-amd64-cpython-39/Release/cuda/emd_cuda.cp39-win_amd64.exp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/build/temp.win-amd64-cpython-39/Release/cuda/emd_cuda.cp39-win_amd64.lib" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/build/temp.win-amd64-cpython-39/Release/cuda/emd_kernel.obj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/cuda/emd.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/cuda/emd_kernel.cu" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/dist/emd_ext-0.0.0-py3.9-win-amd64.egg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/emd.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/emd_ext.egg-info/PKG-INFO" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/emd_ext.egg-info/SOURCES.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/emd_ext.egg-info/dependency_links.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/emd_ext.egg-info/top_level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/setup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/PyTorchEMD/test_emd_loss.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/build/lib.win-amd64-cpython-39/chamfer_3D.cp39-win_amd64.pyd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/build/temp.win-amd64-cpython-39/Release/.ninja_deps" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/build/temp.win-amd64-cpython-39/Release/.ninja_log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/build/temp.win-amd64-cpython-39/Release/build.ninja" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/build/temp.win-amd64-cpython-39/Release/chamfer3D.obj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/build/temp.win-amd64-cpython-39/Release/chamfer_3D.cp39-win_amd64.exp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/build/temp.win-amd64-cpython-39/Release/chamfer_3D.cp39-win_amd64.lib" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/build/temp.win-amd64-cpython-39/Release/chamfer_cuda.obj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/chamfer_3D.egg-info/PKG-INFO" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/chamfer_3D.egg-info/SOURCES.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/chamfer_3D.egg-info/dependency_links.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/chamfer_3D.egg-info/top_level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer3D/dist/chamfer_3D-0.0.0-py3.9-win-amd64.egg" beforeDir="false" afterPath="$PROJECT_DIR$/extention/chamfer3D/dist/chamfer_3D-0.0.0-py3.9-win-amd64.egg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/LICENSE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/MANIFEST.in" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/build/lib/chamfer_distance/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/build/lib/chamfer_distance/chamfer_distance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/chamfer_distance.egg-info/PKG-INFO" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/chamfer_distance.egg-info/SOURCES.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/chamfer_distance.egg-info/dependency_links.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/chamfer_distance.egg-info/requires.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/chamfer_distance.egg-info/top_level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/chamfer_distance/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/chamfer_distance/chamfer_distance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/dist/chamfer_distance-0.1-py3.9.egg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/chamfer_distance/setup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/earth_movers_distance/emd_cuda.egg-info/PKG-INFO" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/earth_movers_distance/emd_cuda.egg-info/SOURCES.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/earth_movers_distance/emd_cuda.egg-info/dependency_links.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/earth_movers_distance/emd_cuda.egg-info/top_level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/earth_movers_distance/emd_kernel.cu" beforeDir="false" afterPath="$PROJECT_DIR$/extention/earth_movers_distance/emd_kernel.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/extention/earth_movers_distance/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/extention/earth_movers_distance/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/GEN/vessel_all/2024-05-11-21-03-52/encoder_129.pth" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/GEN/vessel_all/2024-05-11-21-03-52/vessel_all_128_data.ply" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/GEN/vessel_all/2024-05-11-21-03-52/vessel_all_128_recon.ply" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/GEN/visualize/chair_recon.ply" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/skeleton.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/submit.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/submit_cls.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/submit_gen.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/surface.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_gen.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/test_gen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_seg.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/test_seg.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train_gen.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_gen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_seg.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_seg.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,6 +140,19 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <favorite-branches>
+      <branch-storage>
+        <map>
+          <entry type="LOCAL">
+            <value>
+              <list>
+                <branch-info repo="$PROJECT_DIR$" source="autoencoder" />
+              </list>
+            </value>
+          </entry>
+        </map>
+      </branch-storage>
+    </favorite-branches>
     <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
@@ -52,6 +160,7 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -97,15 +206,37 @@
       <recent name="D:\PythonCode\GenSeg\extention" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\PythonCode\GenSeg\utils" />
       <recent name="D:\PythonCode\GenSeg\logs\GEN" />
       <recent name="D:\PythonCode\GenSeg" />
       <recent name="D:\PythonCode\GenSeg\logs\VAE" />
       <recent name="D:\PythonCode\GenSeg\logs" />
-      <recent name="D:\PythonCode\GenSeg\segment" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.train_cls">
-    <configuration name="model" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.foldingnet">
+    <configuration name="dataset" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="GenSeg" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/dataset.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="foldingnet" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="GenSeg" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -118,7 +249,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/model/model.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/model/foldingnet.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -127,7 +258,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="train_cls" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="setup" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="GenSeg" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -135,12 +266,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/extention/earth_movers_distance" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_cls.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/extention/earth_movers_distance/setup.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -157,7 +288,7 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
@@ -194,17 +325,19 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.train_cls" />
-      <item itemvalue="Python.model" />
+      <item itemvalue="Python.foldingnet" />
       <item itemvalue="Python.train_gen" />
+      <item itemvalue="Python.dataset" />
+      <item itemvalue="Python.setup" />
       <item itemvalue="Python.train_seg" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.train_cls" />
-        <item itemvalue="Python.train_seg" />
-        <item itemvalue="Python.model" />
+        <item itemvalue="Python.foldingnet" />
         <item itemvalue="Python.train_gen" />
+        <item itemvalue="Python.train_seg" />
+        <item itemvalue="Python.dataset" />
+        <item itemvalue="Python.setup" />
       </list>
     </recent_temporary>
   </component>
@@ -263,7 +396,14 @@
       <workItem from="1719985259736" duration="7861000" />
       <workItem from="1719993895487" duration="2586000" />
       <workItem from="1719997514567" duration="11170000" />
-      <workItem from="1721293813072" duration="1191000" />
+      <workItem from="1721293813072" duration="12625000" />
+      <workItem from="1721890804060" duration="16020000" />
+      <workItem from="1721912140291" duration="901000" />
+      <workItem from="1721914568046" duration="288000" />
+      <workItem from="1721916658308" duration="148000" />
+      <workItem from="1721976876872" duration="1426000" />
+      <workItem from="1721984478447" duration="1561000" />
+      <workItem from="1721987819370" duration="3600000" />
     </task>
     <task id="LOCAL-00003" summary="add topo">
       <option name="closed" value="true" />
@@ -337,7 +477,15 @@
       <option name="project" value="LOCAL" />
       <updated>1719982441862</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="update">
+      <option name="closed" value="true" />
+      <created>1721299427118</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1721299427118</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -354,7 +502,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="master/autoencoder" />
+                        <option value="autoencoder" />
                       </list>
                     </value>
                   </entry>
@@ -371,9 +519,9 @@
     <MESSAGE value="add topo" />
     <MESSAGE value="update emd and cd" />
     <MESSAGE value="pointnet++" />
-    <MESSAGE value="update" />
     <MESSAGE value="update and rebuild" />
-    <option name="LAST_COMMIT_MESSAGE" value="update and rebuild" />
+    <MESSAGE value="update" />
+    <option name="LAST_COMMIT_MESSAGE" value="update" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -399,21 +547,23 @@
     <SUITE FILE_PATH="coverage/GenSeg$pointnet2.coverage" NAME="pointnet2 Coverage Results" MODIFIED="1719816353888" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/segment/model" />
     <SUITE FILE_PATH="coverage/GenSeg$pointnet.coverage" NAME="pointnet Coverage Results" MODIFIED="1719667096006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/segment/model" />
     <SUITE FILE_PATH="coverage/GenSeg$chamfer_distance.coverage" NAME="chamfer_distance Coverage Results" MODIFIED="1719655709143" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/extention/pyTorchChamferDistance/chamfer_distance" />
-    <SUITE FILE_PATH="coverage/GenSeg$dataset.coverage" NAME="dataset Coverage Results" MODIFIED="1716289930927" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/generate/utils" />
     <SUITE FILE_PATH="coverage/GenSeg$test_seg.coverage" NAME="test_seg Coverage Results" MODIFIED="1716384535801" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/segment" />
     <SUITE FILE_PATH="coverage/GenSeg$.coverage" NAME=" Coverage Results" MODIFIED="1718606921136" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/GenSeg$dataset.coverage" NAME="dataset Coverage Results" MODIFIED="1721629445550" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
+    <SUITE FILE_PATH="coverage/GenSeg$foldingnet.coverage" NAME="foldingnet Coverage Results" MODIFIED="1721992506467" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model" />
     <SUITE FILE_PATH="coverage/GenSeg$superpoint.coverage" NAME="superpoint Coverage Results" MODIFIED="1714381350512" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/segment" />
     <SUITE FILE_PATH="coverage/GenSeg$dist_chamfer_3D.coverage" NAME="dist_chamfer_3D Coverage Results" MODIFIED="1719815077850" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/extention/chamfer3D" />
     <SUITE FILE_PATH="coverage/GenSeg$train_gen__1_.coverage" NAME="train_gen (1) Coverage Results" MODIFIED="1719839302291" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/GenSeg$train_gen.coverage" NAME="train_gen Coverage Results" MODIFIED="1719843027468" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/GenSeg$train_cls.coverage" NAME="train_cls Coverage Results" MODIFIED="1720016830143" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/GenSeg$model.coverage" NAME="model Coverage Results" MODIFIED="1719929218519" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model" />
+    <SUITE FILE_PATH="coverage/GenSeg$train_gen.coverage" NAME="train_gen Coverage Results" MODIFIED="1721906474799" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/GenSeg$model.coverage" NAME="model Coverage Results" MODIFIED="1721300128504" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model" />
     <SUITE FILE_PATH="coverage/GenSeg$utils.coverage" NAME="utils Coverage Results" MODIFIED="1719661678464" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/segment/utils" />
     <SUITE FILE_PATH="coverage/GenSeg$partdecoder.coverage" NAME="partdecoder Coverage Results" MODIFIED="1714381626746" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/segment" />
     <SUITE FILE_PATH="coverage/GenSeg$test_cd.coverage" NAME="test_cd Coverage Results" MODIFIED="1718606996029" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/GenSeg$setup.coverage" NAME="setup Coverage Results" MODIFIED="1719658188033" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/extention/earth_movers_distance" />
+    <SUITE FILE_PATH="coverage/GenSeg$setup.coverage" NAME="setup Coverage Results" MODIFIED="1721309170268" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/extention/earth_movers_distance" />
+    <SUITE FILE_PATH="coverage/GenSeg$emd.coverage" NAME="emd Coverage Results" MODIFIED="1721309129248" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/extention/earth_movers_distance" />
     <SUITE FILE_PATH="coverage/GenSeg$test_gen.coverage" NAME="test_gen Coverage Results" MODIFIED="1715091731880" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/generate" />
     <SUITE FILE_PATH="coverage/GenSeg$visualize.coverage" NAME="visualize Coverage Results" MODIFIED="1715441374410" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/segment/utils" />
-    <SUITE FILE_PATH="coverage/GenSeg$train_seg.coverage" NAME="train_seg Coverage Results" MODIFIED="1720003936583" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
+    <SUITE FILE_PATH="coverage/GenSeg$train_seg.coverage" NAME="train_seg Coverage Results" MODIFIED="1721890931559" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
   </component>
 </project>

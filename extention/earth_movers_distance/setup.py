@@ -11,7 +11,7 @@ setup(
                 'emd.cpp',
                 'emd_kernel.cu',
             ],
-            # extra_compile_args={'cxx': ['-g'], 'nvcc': ['-O2']}
+            extra_compile_args={'cxx': ['-g'], 'nvcc': ['-O2']}
         ),
     ],
     cmdclass={
